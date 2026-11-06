@@ -1,0 +1,7 @@
+{
+  "NFT.PopoutButton.Tooltip": "Pop out into separate window",
+  "NFT.AttachButton.Tooltip": "Attach back to main window",
+
+  "NFT.ClearTargets.ButtonTitleGM": "Clear All Targets (All Players)",
+  "NFT.ClearTargets.ButtonTitlePlayer": "Clear My Targets"
+}

@@ -1,0 +1,283 @@
+<div class="nft-dashboard-wrapper {{#if fullHints}}nft-full-hints{{/if}}">
+    {{!-- Search, description length and quick filters --}}
+    <header class="nft-dashboard-header">
+        <div class="nft-header-row">
+            <div class="nft-search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon" inert></i>
+                <input type="search" class="nft-search-input" placeholder="Search settings… (e.g. chat, targets, toolbar)" autocomplete="off" spellcheck="false" aria-label="Search settings">
+                <button type="button" class="nft-search-clear" data-tooltip="Clear search and filters" aria-label="Clear search and filters" hidden>
+                    <i class="fa-solid fa-xmark" inert></i>
+                </button>
+            </div>
+            <div class="nft-search-status" hidden>
+                <span class="nft-match-count">0</span> found · <kbd>Enter</kbd> opens the first
+            </div>
+            <button type="button" class="nft-hint-toggle" data-action="toggleHints" aria-pressed="{{#if fullHints}}true{{else}}false{{/if}}" data-tooltip="Show each description in full, or one line each (click a description to open it)">
+                <i class="fa-solid {{#if fullHints}}fa-align-left{{else}}fa-grip-lines{{/if}}" inert></i>
+                <span>{{#if fullHints}}Full descriptions{{else}}Short descriptions{{/if}}</span>
+            </button>
+        </div>
+        <div class="nft-filter-bar" role="toolbar" aria-label="Quick filters">
+            <span class="nft-filter-label">Show only</span>
+            {{#each filters}}
+            <button type="button" class="nft-filter-chip" data-action="toggleFilter" data-filter="{{this.id}}" aria-pressed="false" data-tooltip="{{this.tooltip}}" hidden>
+                <i class="{{this.icon}}" inert></i> {{this.label}} <span class="nft-filter-count">0</span>
+            </button>
+            {{/each}}
+        </div>
+    </header>
+
+    <div class="nft-dashboard-body">
+        <nav class="nft-nav-tabs" aria-label="Settings categories">
+            {{#each navTabs}}
+            <button type="button" class="nft-nav-tab {{#if this.active}}active{{/if}}" data-tab="{{this.id}}">
+                <i class="{{this.icon}}" inert></i>
+                <span class="tab-label">{{this.label}}</span>
+                {{#if this.newCount}}<span class="tab-new" data-tooltip="{{this.newCount}} new since you last looked">{{this.newCount}}</span>{{/if}}
+                <span class="tab-badge" data-tab-matches="{{this.id}}" hidden>0</span>
+            </button>
+            {{/each}}
+        </nav>
+
+        <div class="nft-settings-content standard-form">
+            {{!-- Overview: every feature at a glance --}}
+            <section class="nft-tab-panel nft-overview {{#if overview.active}}active{{/if}}" data-tab="overview">
+                <div class="nft-tab-header">
+                    <h2><i class="fa-solid fa-table-cells-large" inert></i> {{overview.label}}</h2>
+                    <p class="nft-tab-desc">{{overview.description}}</p>
+                </div>
+
+                {{#if whatsNew.length}}
+                <div class="nft-whats-new">
+                    <h3><i class="fa-solid fa-star" inert></i> New since you last looked</h3>
+                    <ul>
+                        {{#each whatsNew}}
+                        <li>
+                            <button type="button" class="nft-link" data-action="revealSetting" data-key="{{this.key}}">{{this.label}}</button>
+                            <span class="nft-whats-new-where">{{this.where}} · {{this.introduced}}</span>
+                        </li>
+                        {{/each}}
+                    </ul>
+                    {{#if whatsNewMore}}<p class="nft-whats-new-more">…and {{whatsNewMore}} more. Use the <em>New</em> filter above to see them all.</p>{{/if}}
+                </div>
+                {{/if}}
+
+                {{#each overview.groups}}
+                <div class="nft-overview-group">
+                    <h3 class="nft-section-title">
+                        <i class="{{this.icon}}" inert></i>
+                        <span>{{this.label}}</span>
+                        {{#if @root.canModify}}<span class="nft-group-count"><span class="nft-group-on">{{this.onCount}}</span> of {{this.total}} on</span>{{/if}}
+                    </h3>
+                    <div class="nft-feature-grid">
+                        {{#each this.features}}
+                        <article class="nft-feature-card {{#unless this.on}}off{{/unless}} {{#if this.unavailable}}unavailable{{/if}}" data-key="{{this.key}}">
+                            <header>
+                                {{#if this.canReveal}}
+                                <button type="button" class="nft-feature-name" data-action="revealSetting" data-key="{{this.key}}" data-tooltip="Show all options">{{this.name}}</button>
+                                {{else}}
+                                <span class="nft-feature-name">{{this.name}}</span>
+                                {{/if}}
+                                {{#if this.isNew}}<span class="nft-badge new">New</span>{{/if}}
+                                {{#if this.canToggle}}
+                                <label class="nft-switch nft-switch-small" data-tooltip="Turn on or off. Save Changes keeps it.">
+                                    <input type="checkbox" class="nft-feature-proxy" data-proxy-for="{{this.key}}" aria-label="{{this.name}}" {{#if this.on}}checked{{/if}}>
+                                    <span class="nft-slider"></span>
+                                </label>
+                                {{else}}
+                                <span class="nft-feature-value">{{this.valueLabel}}</span>
+                                {{/if}}
+                            </header>
+                            <p>{{this.summary}}</p>
+                            {{#if (or this.unavailable this.clientKey this.docsUrl)}}
+                            <footer>
+                                {{#if this.unavailable}}<span class="nft-badge unavailable"><i class="fa-solid fa-ban" inert></i> {{this.unavailableLabel}}</span>{{/if}}
+                                {{#if this.clientKey}}
+                                <button type="button" class="nft-pair-chip" data-action="revealSetting" data-key="{{this.clientKey}}" data-pair="{{this.clientKey}}" data-tooltip="Each player can change this for themselves under Personal Preferences">
+                                    <i class="fa-solid fa-user" inert></i> Your choice: <span class="nft-pair-value"></span>
+                                </button>
+                                {{/if}}
+                                {{#if this.docsUrl}}
+                                <a class="nft-docs-link" href="{{this.docsUrl}}" target="_blank" rel="noopener" data-tooltip="Read more in the module's documentation"><i class="fa-solid fa-book-open" inert></i> Docs</a>
+                                {{/if}}
+                            </footer>
+                            {{/if}}
+                        </article>
+                        {{/each}}
+                    </div>
+                    {{#if this.hiddenCount}}<p class="nft-overview-hidden">{{this.hiddenCount}} more {{#if @root.canModify}}hidden{{else}}turned off in this world{{/if}}.</p>{{/if}}
+                </div>
+                {{/each}}
+            </section>
+
+            {{!-- Settings tabs --}}
+            {{#each tabs}}
+            <section class="nft-tab-panel {{#if this.active}}active{{/if}}" data-tab="{{this.id}}">
+                <div class="nft-tab-header">
+                    <h2><i class="{{this.icon}}" inert></i> {{this.label}}</h2>
+                    {{#if this.description}}
+                    <p class="nft-tab-desc">{{this.description}}</p>
+                    {{/if}}
+                </div>
+
+                {{#each this.sections}}
+                <div class="nft-section" data-section="{{this.id}}">
+                    {{#if this.title}}
+                    <h3 class="nft-section-title">
+                        {{#if this.icon}}<i class="{{this.icon}}" inert></i>{{/if}}
+                        <span>{{this.title}}</span>
+                    </h3>
+                    {{/if}}
+
+                    <div class="nft-settings-list">
+                        {{#each this.settings}}
+                        <div class="nft-setting-row {{#if this.isChild}}nft-child-setting{{/if}} {{#if this.unavailable}}nft-unavailable{{/if}}"
+                             {{#if this.unavailable}}data-tooltip="{{this.unavailableReason}}"{{/if}}
+                             data-key="{{this.key}}"
+                             data-scope="{{this.scope}}"
+                             data-new="{{#if this.isNew}}true{{else}}false{{/if}}"
+                             data-reload="{{#if this.requiresReload}}true{{else}}false{{/if}}"
+                             {{#if this.parentKey}}data-parent="{{this.parentKey}}"{{/if}}
+                             data-search-text="{{this.searchText}}">
+
+                            <div class="nft-setting-info">
+                                <div class="nft-setting-title-row">
+                                    {{#if this.isChild}}<span class="nft-tree-branch" inert>↳</span>{{/if}}
+                                    <label class="nft-setting-name" for="nft-setting-{{this.key}}">{{this.name}}</label>
+                                    {{#if this.docsUrl}}
+                                    <a class="nft-docs-link nft-docs-icon" href="{{this.docsUrl}}" target="_blank" rel="noopener" data-tooltip="Read more in the module's documentation" aria-label="Documentation"><i class="fa-solid fa-circle-info" inert></i></a>
+                                    {{/if}}
+                                    <span class="nft-modified-dot" data-tooltip="Changed from the default"></span>
+
+                                    <div class="nft-badges">
+                                        {{#if this.moduleBadge}}
+                                        <span class="nft-badge module" data-tooltip="From {{this.moduleTitle}}">{{this.moduleBadge}}</span>
+                                        {{/if}}
+                                        {{#if this.isNew}}
+                                        <span class="nft-badge new" data-tooltip="Added in version {{this.introduced}}">New</span>
+                                        {{/if}}
+                                        {{#if this.isUser}}
+                                        <span class="nft-badge user" data-tooltip="Stored per user account: each user sets it for themselves">User</span>
+                                        {{else if this.isClient}}
+                                        <span class="nft-badge client" data-tooltip="Stored in this browser: only affects your own screen">Personal</span>
+                                        {{else}}
+                                        <span class="nft-badge world" data-tooltip="Applies to everyone in this world">World</span>
+                                        {{/if}}
+
+                                        {{#if this.unavailable}}
+                                        <span class="nft-badge unavailable" data-tooltip="{{this.unavailableReason}}"><i class="fa-solid fa-ban" inert></i> {{this.unavailableLabel}}</span>
+                                        {{/if}}
+
+                                        {{#if this.requiresReload}}
+                                        <span class="nft-badge reload" data-tooltip="Takes effect after reloading">Reload</span>
+                                        {{/if}}
+                                    </div>
+
+                                    {{#if this.pairKey}}
+                                    {{#if this.isClient}}
+                                    <button type="button" class="nft-pair-chip" data-action="revealSetting" data-key="{{this.pairKey}}" data-pair="{{this.pairKey}}" data-tooltip="{{#if @root.canModify}}The world setting for everyone. If it is off, your choice has no effect. Click to go there.{{else}}Set by the GM for everyone. If it is off, your choice has no effect.{{/if}}">
+                                        <i class="fa-solid fa-globe" inert></i> World: <span class="nft-pair-value"></span>
+                                    </button>
+                                    {{else}}
+                                    <button type="button" class="nft-pair-chip" data-action="revealSetting" data-key="{{this.pairKey}}" data-pair="{{this.pairKey}}" data-tooltip="Each player can change this for themselves under Personal Preferences. Click to see your own choice.">
+                                        <i class="fa-solid fa-user" inert></i> Personal: <span class="nft-pair-value"></span>
+                                    </button>
+                                    {{/if}}
+                                    {{/if}}
+
+                                </div>
+
+                                {{#if this.hint}}
+                                <p class="nft-setting-hint">{{this.hint}}</p>
+                                {{/if}}
+                            </div>
+
+                            <div class="nft-setting-control">
+                                {{#if this.canReset}}
+                                <button type="button" class="nft-row-reset" data-action="resetSetting" data-key="{{this.key}}" data-tooltip="Reset to default{{#if this.defaultLabel}}: {{this.defaultLabel}}{{/if}}" aria-label="Reset to default">
+                                    <i class="fa-solid fa-rotate-left" inert></i>
+                                </button>
+                                {{/if}}
+
+                                {{#if (eq this.type "Boolean")}}
+                                <label class="nft-switch">
+                                    <input type="checkbox" id="nft-setting-{{this.key}}" name="{{this.key}}" {{#if this.value}}checked{{/if}} {{#if this.locked}}disabled{{/if}}>
+                                    <span class="nft-slider"></span>
+                                </label>
+                                {{else if (eq this.type "Select")}}
+                                <select id="nft-setting-{{this.key}}" name="{{this.key}}" class="nft-select" {{#if this.locked}}disabled{{/if}}>
+                                    {{#each this.choices}}
+                                    <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+                                    {{/each}}
+                                </select>
+                                {{else if (eq this.type "Number")}}
+                                <input type="number" id="nft-setting-{{this.key}}" name="{{this.key}}" value="{{this.value}}" class="nft-number-input" {{#if this.locked}}disabled{{/if}}>
+                                {{else if (eq this.type "Color")}}
+                                <div class="nft-color-group">
+                                    <input type="color" id="nft-setting-{{this.key}}" name="{{this.key}}" value="{{this.value}}" class="nft-color-input" {{#if this.locked}}disabled{{/if}}>
+                                    <input type="text" name="{{this.key}}-text" value="{{this.value}}" class="nft-color-text" maxlength="7" pattern="#[0-9a-fA-F]{6}" placeholder="#c9a227" aria-label="Hex color" {{#if this.locked}}disabled{{/if}}>
+                                </div>
+                                {{else if (eq this.type "FilePicker")}}
+                                <div class="nft-file-picker-group">
+                                    <input type="text" id="nft-setting-{{this.key}}" name="{{this.key}}" value="{{this.value}}" class="nft-text-input" {{#if this.locked}}disabled{{/if}}>
+                                    <button type="button" class="nft-file-picker-btn" data-target="nft-setting-{{this.key}}" data-type="{{this.filePicker}}" data-tooltip="Browse files" aria-label="Browse files" {{#if this.locked}}disabled{{/if}}>
+                                        <i class="fa-solid fa-file-import" inert></i>
+                                    </button>
+                                </div>
+                                {{else if this.list}}
+                                <div class="nft-list-group">
+                                    <input type="hidden" id="nft-setting-{{this.key}}" name="{{this.key}}" value="{{this.value}}" {{#if this.locked}}disabled{{/if}}>
+                                    {{#if this.statusPicker}}
+                                    <button type="button" class="nft-btn secondary nft-list-edit-btn" data-action="editStatuses" data-key="{{this.key}}" title="Choose which statuses are hidden" {{#if this.locked}}disabled{{/if}}>
+                                        <i class="fa-solid fa-eye-slash" inert></i> Choose <span class="nft-list-count-badge"><span class="nft-list-count">{{this.listCount}}</span>&nbsp;hidden</span>
+                                    </button>
+                                    {{else}}
+                                    <button type="button" class="nft-btn secondary nft-list-edit-btn" data-action="editList" data-key="{{this.key}}" title="Open the list editor" {{#if this.locked}}disabled{{/if}}>
+                                        <i class="fa-solid fa-list" inert></i> Edit List <span class="nft-list-count-badge"><span class="nft-list-count">{{this.listCount}}</span></span>
+                                    </button>
+                                    {{/if}}
+                                </div>
+                                {{else}}
+                                <input type="text" id="nft-setting-{{this.key}}" name="{{this.key}}" value="{{this.value}}" class="nft-text-input" {{#if this.locked}}disabled{{/if}}>
+                                {{/if}}
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                {{/each}}
+            </section>
+            {{/each}}
+
+            <div class="nft-no-results" hidden>
+                <i class="fa-solid fa-filter-circle-xmark" inert></i>
+                <p>No settings match your search and filters.</p>
+                <button type="button" class="nft-btn-clear-search">Clear Search &amp; Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="nft-dashboard-footer">
+        <div class="nft-footer-left">
+            <button type="button" class="nft-btn secondary" data-action="resetDefaults" title="Reset settings to default values">
+                <i class="fa-solid fa-rotate-left" inert></i> Reset Defaults
+            </button>
+            <button type="button" class="nft-btn secondary" data-action="exportSettings" title="Export all settings to a JSON file">
+                <i class="fa-solid fa-download" inert></i> Export JSON
+            </button>
+            <button type="button" class="nft-btn secondary" data-action="importSettings" {{#unless canModify}}disabled{{/unless}} title="Import settings from a JSON file">
+                <i class="fa-solid fa-upload" inert></i> Import JSON
+            </button>
+            <input type="file" class="nft-file-import-input" accept=".json" style="display: none;">
+        </div>
+        <div class="nft-footer-right">
+            <span class="nft-pending-note" hidden></span>
+            <button type="button" class="nft-btn cancel" data-action="close" title="Close without saving">
+                <i class="fa-solid fa-xmark" inert></i> Cancel
+            </button>
+            <button type="submit" class="nft-btn primary" title="Save changes">
+                <i class="fa-solid fa-floppy-disk" inert></i> Save Changes <span class="nft-save-count" hidden>0</span>
+            </button>
+        </div>
+    </footer>
+</div>
