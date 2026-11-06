@@ -1,7 +1,7 @@
 {
   "id": "niks-foundry-tweaks",
   "title": "Nik's Foundry Tweaks",
-  "description": "System-independent quality-of-life tweaks for Foundry VTT, and the shared settings dashboard of Nik's Tweaks modules.",
+  "description": "Small fixes and conveniences for Foundry VTT that work in any game system, plus the settings window shared by Nik's other Tweaks modules.",
   "url": "https://github.com/nschoenwald/niks-foundry-tweaks",
   "manifest": "https://github.com/nschoenwald/niks-foundry-tweaks/releases/latest/download/module.json",
   "download": "https://github.com/nschoenwald/niks-foundry-tweaks/releases/latest/download/module.zip",
