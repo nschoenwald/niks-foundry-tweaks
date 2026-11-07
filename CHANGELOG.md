@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.1.2] - 2026-11-07
+### Fixed
+- **macOS Canvas Performance**: On Macs, the canvas no longer slows down more and more as tokens are added to a scene. Scenes with dozens of tokens that ran at 20–50 FPS now run at the display's full refresh rate again. Nothing changes on Windows or Linux.
+
 ## [14.1.1] - 2026-11-07
 ### Fixed
 - **Hide Private GM Rolls from Players**: No more libWrapper warning that Nik's Foundry Tweaks and Nik's DnD5e Tweaks "modify the same FoundryVTT functionality" when chat messages are shown. Private GM rolls stay hidden exactly as before.

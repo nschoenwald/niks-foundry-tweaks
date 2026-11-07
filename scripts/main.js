@@ -32,6 +32,7 @@ import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-
 import { initAutoUnpauseOnLogin } from "./features/utilities/auto-unpause-on-login.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
+import { initFixMacBatchBuffer } from "./features/patches/fix-mac-batch-buffer.js";
 
 // Dashboard, API, migration
 import { MODULE_ID, log, isFeatureActive } from "./context.js";
@@ -519,6 +520,7 @@ Hooks.once("setup", () => {
     initAutoUnpauseOnLogin();
     initFixTokenBarRefresh();
     initFixPlaceablesSidebarTab();
+    initFixMacBatchBuffer();
 });
 
 Hooks.once("ready", async () => {
