@@ -7,6 +7,7 @@
  *
  * @introduced v14.0.0 (moved from Nik's DnD5e Tweaks, added there in v14.30.0)
  * @updated v14.0.0 (system roll detection comes from add-on extensions)
+ * @updated v14.1.1 (Visibility wrapper always chains, fixing the libWrapper conflict warning with Nik's DnD5e Tweaks)
  */
 import { getSetting, debug } from "../../context.js";
 import { patchMethod } from "../../utils/patch-helper.js";
@@ -47,24 +48,23 @@ export function initHidePrivateGMRolls() {
     patchMethod(
         "CONFIG.ChatMessage.documentClass.prototype.visible#get",
         function(wrapped) {
+            // Always chain first: Nik's DnD5e Tweaks wraps the same getter (Player Damage Prompt), and returning
+            // without calling `wrapped` made libWrapper report a conflict between the two modules.
+            // This wrapper only ever hides messages, so the result is the same.
+            const visible = wrapped();
+            if (!visible) return visible;
+
             // If the feature is disabled, use default Foundry behavior
-            if (!getSetting("enableHidePrivateGMRolls")) {
-                return wrapped();
-            }
+            if (!getSetting("enableHidePrivateGMRolls")) return visible;
 
             // GMs should always see all messages according to core logic
-            if (game.user?.isGM) {
-                return wrapped();
-            }
+            if (game.user?.isGM) return visible;
 
             // Determine if the message author is a GM
             const author = this.author ?? game.users?.get(this.user ?? this._source?.author);
-            const isAuthorGM = Boolean(author?.isGM);
 
             // If the message was not authored by a GM, use default behavior
-            if (!isAuthorGM) {
-                return wrapped();
-            }
+            if (!author?.isGM) return visible;
 
             // The author is a GM, and current user is a non-GM player.
             // Check if this message is a whispered, private, or blind roll.
@@ -82,15 +82,12 @@ export function initHidePrivateGMRolls() {
                 if (isBlind) return false;
 
                 // For whispered rolls, only visible if the player is explicitly in the whisper list
-                const isRecipient = hasWhisper && this.whisper.includes(game.user.id);
-                if (!isRecipient) return false;
-
-                return wrapped();
+                if (!hasWhisper || !this.whisper.includes(game.user.id)) return false;
             }
 
-            return wrapped();
+            return visible;
         },
-        "MIXED"
+        "WRAPPER"
     );
 
     // Defense-in-depth: if any other module manually rendered or injected an invisible message

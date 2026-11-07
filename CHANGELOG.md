@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.1.1] - 2026-11-07
+### Fixed
+- **Hide Private GM Rolls from Players**: No more libWrapper warning that Nik's Foundry Tweaks and Nik's DnD5e Tweaks "modify the same FoundryVTT functionality" when chat messages are shown. Private GM rolls stay hidden exactly as before.
+
 ## [14.1.0] - 2026-11-07
 ### Added
 - **French translation**: The module is now available in French, reviewed by Kameleau. Thank you!
