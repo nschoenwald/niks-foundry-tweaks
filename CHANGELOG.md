@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.1.0] - 2026-11-07
+### Added
+- **French translation**: The module is now available in French, reviewed by Kameleau. Thank you!
+
 ## [14.0.0] - 2026-11-06
 ### Added
 - **Nik's Foundry Tweaks**: First release. The system-independent features of Nik's DnD5e Tweaks now live in this module, so they work in any game system: Readable Text Size, Sheet Pop-out Button, Clean Sheet Window Titles, Context Menu Styling, Reliable Chat Log Auto-Scroll, Hide Private GM Rolls from Players, Actor Directory Disposition Dots, Sidebar Multi-line Names, Sync Browser Tab Title, Toolbar Limitation, Carolingian UI Theme Harmony, Clear Targets Token Control Button, Disable Underground Token Hiding, Enhanced Teleport Targeting UI, Auto-Add Tokens to Combat, Auto-Unpause When Logging In and Debug Mode, plus two fixes for Foundry bugs.
