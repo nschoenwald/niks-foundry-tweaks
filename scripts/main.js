@@ -21,12 +21,17 @@ import { initCleanSheetTitles } from "./features/ui-visuals/clean-sheet-titles.j
 import { initContextMenuStyling } from "./features/ui-visuals/context-menu-styling.js";
 import { initHidePrivateGMRolls } from "./features/ui-visuals/hide-private-gm-rolls.js";
 import { initChatScrollFix, enableChatScrollFix, disableChatScrollFix } from "./features/ui-visuals/chat-scroll-fix.js";
+import { updateLightweightLists } from "./features/ui-visuals/lightweight-lists.js";
+import { updateBatchedSidebarUpdates } from "./features/ui-visuals/batched-sidebar-updates.js";
 
 // Canvas and combat
 import { initClearTargets, onClearTargetsSocket } from "./features/canvas-tokens/clear-targets.js";
 import { initDisableUndergroundTokenHiding } from "./features/canvas-tokens/disable-underground-token-hiding.js";
 import { initAutoanimationsTeleportUI } from "./features/canvas-tokens/autoanimations-teleport-ui.js";
 import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-combat.js";
+import { updateIdleFrameRate } from "./features/canvas-tokens/idle-frame-rate.js";
+import { updateVisionUpdateThrottle } from "./features/canvas-tokens/vision-update-throttle.js";
+import { initVideoOptimization, updateVideoOptimization } from "./features/canvas-tokens/video-optimization.js";
 
 // Utilities and patches
 import { initAutoUnpauseOnLogin } from "./features/utilities/auto-unpause-on-login.js";
@@ -199,6 +204,100 @@ Hooks.once("init", () => {
         onChange: () => updateReadableTextSize()
     });
 
+    game.settings.register(MODULE_ID, "clientEnableLightweightLists", {
+        name: "Lightweight Chat & Sidebar Lists (Personal)",
+        hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateLightweightLists()
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableBatchedSidebarUpdates", {
+        name: "Batched Sidebar Updates (Experimental, Personal)",
+        hint: "Combines rapid updates of the sidebar and Combat Tracker into one, and updates closed sidebar tabs when you open them (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateBatchedSidebarUpdates()
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableIdleFrameRate", {
+        name: "Idle Frame Rate (Personal)",
+        hint: "Lowers the canvas frame rate on your screen while nobody interacts and nothing moves (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateIdleFrameRate()
+    });
+
+    game.settings.register(MODULE_ID, "idleFrameRate", {
+        name: "↳ Frame Rate While Idle",
+        hint: "The canvas frame rate while the game is idle.",
+        scope: "client",
+        config: false,
+        type: String,
+        default: "20",
+        choices: { 10: "10 FPS", 20: "20 FPS", 30: "30 FPS" },
+        onChange: () => updateIdleFrameRate()
+    });
+
+    game.settings.register(MODULE_ID, "idleFrameRateDelay", {
+        name: "↳ Idle After",
+        hint: "How long without activity before the frame rate drops.",
+        scope: "client",
+        config: false,
+        type: String,
+        default: "30",
+        choices: { 15: "15 seconds", 30: "30 seconds", 60: "1 minute", 120: "2 minutes" },
+        onChange: () => updateIdleFrameRate()
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableVisionUpdateThrottle", {
+        name: "Throttled Vision Updates While Moving (Experimental, Personal)",
+        hint: "Recomputes a moving token's vision and light a limited number of times per second on your screen (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateVisionUpdateThrottle()
+    });
+
+    game.settings.register(MODULE_ID, "visionUpdateRate", {
+        name: "↳ Vision Updates per Second",
+        hint: "How often a moving token's vision and light are recomputed.",
+        scope: "client",
+        config: false,
+        type: String,
+        default: "20",
+        choices: { 30: "30 per second", 20: "20 per second", 15: "15 per second", 10: "10 per second" },
+        onChange: () => updateVisionUpdateThrottle()
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableVideoOptimization", {
+        name: "Lighter Video Playback (Personal)",
+        hint: "Stops updating animated maps, tiles and tokens on your screen while they are out of view (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateVideoOptimization()
+    });
+
+    game.settings.register(MODULE_ID, "videoFrameRateCap", {
+        name: "↳ Video Frame Rate Limit",
+        hint: "Shows at most this many frames per second of animated maps, tiles and tokens.",
+        scope: "client",
+        config: false,
+        type: String,
+        default: "0",
+        choices: { 0: "No limit", 30: "30 FPS", 24: "24 FPS", 15: "15 FPS", 10: "10 FPS" },
+        onChange: () => updateVideoOptimization()
+    });
+
     game.settings.register(MODULE_ID, "clientEnableCarolingianTheme", {
         name: "Carolingian UI Theme Harmony (Personal)",
         hint: "Adopts Carolingian UI's active color theme and styling on your client (if enabled by the GM and Carolingian UI is active).",
@@ -314,6 +413,28 @@ Hooks.once("init", () => {
         default: false,
         restricted: true,
         onChange: () => updateReadableTextSize()
+    });
+
+    game.settings.register(MODULE_ID, "enableLightweightLists", {
+        name: "Lightweight Chat & Sidebar Lists",
+        hint: "Lets the browser skip drawing chat messages and sidebar directory entries that are scrolled out of view, so long chat logs and large directories scroll and update faster.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        restricted: true,
+        onChange: () => updateLightweightLists()
+    });
+
+    game.settings.register(MODULE_ID, "enableBatchedSidebarUpdates", {
+        name: "Batched Sidebar Updates (Experimental)",
+        hint: "Experimental: combines rapid updates of the sidebar directories and the Combat Tracker into one redraw, updates sidebar tabs that aren't open only when you open them, and skips rebuilding the Actors and Items folder lists when only values like hit points change.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        restricted: true,
+        onChange: () => updateBatchedSidebarUpdates()
     });
 
     game.settings.register(MODULE_ID, "enableSidebarNameWrap", {
@@ -434,6 +555,39 @@ Hooks.once("init", () => {
         }
     });
 
+    game.settings.register(MODULE_ID, "enableIdleFrameRate", {
+        name: "Idle Frame Rate",
+        hint: "Lowers the canvas frame rate while nobody interacts with the game and nothing moves, and returns to the normal frame rate on the next activity.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        restricted: true,
+        onChange: () => updateIdleFrameRate()
+    });
+
+    game.settings.register(MODULE_ID, "enableVisionUpdateThrottle", {
+        name: "Throttled Vision Updates While Moving (Experimental)",
+        hint: "Experimental: while a token moves, recomputes its vision and light a limited number of times per second instead of every frame.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        restricted: true,
+        onChange: () => updateVisionUpdateThrottle()
+    });
+
+    game.settings.register(MODULE_ID, "enableVideoOptimization", {
+        name: "Lighter Video Playback",
+        hint: "Animated maps, tiles and tokens stop sending new frames to the graphics card while they are off screen or hidden, and can be limited to fewer frames per second.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        restricted: true,
+        onChange: () => updateVideoOptimization()
+    });
+
     game.settings.register(MODULE_ID, "enableAutoAddTokensToCombat", {
         name: "Auto-Add Tokens to Combat",
         hint: "Automatically adds new tokens to the active combat encounter when created or dragged to the canvas during combat.",
@@ -510,11 +664,16 @@ Hooks.once("setup", () => {
     initCarolingianHarmony();
     initChatScrollFix();
     initHidePrivateGMRolls();
+    updateLightweightLists();
+    updateBatchedSidebarUpdates();
 
     // Canvas and combat
     initAutoAddTokensToCombat();
     initAutoanimationsTeleportUI();
     initClearTargets();
+    updateIdleFrameRate();
+    updateVisionUpdateThrottle();
+    initVideoOptimization();
 
     // Utilities and fixes
     initAutoUnpauseOnLogin();

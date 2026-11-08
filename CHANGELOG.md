@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.2.0] - 2026-11-08
+### Added
+- **Lightweight Chat & Sidebar Lists**: Long chat logs and large directories scroll and update faster. The browser skips drawing chat messages and sidebar entries that are out of view. Nothing changes visually. Off by default for now: the GM can turn it on in the Settings Dashboard, and players can turn it off for themselves.
+- **Batched Sidebar Updates (Experimental)**: The Combat Tracker and sidebar directories no longer redraw again and again in busy moments. An area spell damaging many creatures redraws the Combat Tracker once instead of once per creature, closed sidebar tabs catch up when you open them, and hit point changes no longer rebuild the Actors folder list. Experimental and off by default: if the Combat Tracker or a directory shows outdated information with it on, turn it off and let me know.
+- **Idle Frame Rate**: The canvas can drop to a lower frame rate while nobody does anything and nothing moves, and returns to normal on the next mouse movement, key press, token movement or chat message. Saves battery, heat and fan noise. Off by default; players can turn it off and choose the idle frame rate for themselves.
+- **Throttled Vision Updates While Moving (Experimental)**: Smoother token movement in scenes with many walls: a moving token's vision and light are recalculated a limited number of times per second instead of every frame, and exactly at the end of the move. Experimental and off by default.
+- **Lighter Video Playback**: Animated maps, tiles and tokens stop updating while they are off screen, and can optionally be limited to fewer frames per second. Videos keep playing, so timing and sound don't change. Off by default; players can turn it off and set the limit for themselves.
+- All of the new performance features work together with Prime Performance.
+
 ## [14.1.2] - 2026-11-07
 ### Fixed
 - **macOS Canvas Performance**: On Macs, the canvas no longer slows down more and more as tokens are added to a scene. Scenes with dozens of tokens that ran at 20–50 FPS now run at the display's full refresh rate again. Nothing changes on Windows or Linux.

@@ -44,12 +44,17 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Hide Private GM Rolls from Players](#hide-private-gm-rolls-from-players)** | UI & Visuals | ✅ Enabled | No |
 | **[Actor Directory Disposition Dots](#actor-directory-disposition-dots)** | UI & Visuals | ✅ Enabled | No |
 | **[Sidebar Multi-line Names](#sidebar-multi-line-names)** | UI & Visuals | ✅ Enabled | No |
+| **[Lightweight Chat & Sidebar Lists](#lightweight-chat--sidebar-lists)** | UI & Visuals | ❌ Disabled | Yes |
+| **[Batched Sidebar Updates (Experimental)](#batched-sidebar-updates-experimental)** | UI & Visuals | ❌ Disabled | Yes |
 | **[Sync Browser Tab Title](#sync-browser-tab-title)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Toolbar Limitation](#toolbar-limitation)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Carolingian UI Theme Harmony](#carolingian-ui-theme-harmony)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clear Targets Token Control Button](#clear-targets-token-control-button)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Disable Underground Token Hiding](#disable-underground-token-hiding)** | Canvas & Tokens | ❌ Disabled | No |
 | **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations)** | Canvas & Tokens | ✅ Enabled | Yes |
+| **[Idle Frame Rate](#idle-frame-rate)** | Canvas & Tokens | ❌ Disabled | Yes |
+| **[Throttled Vision Updates While Moving (Experimental)](#throttled-vision-updates-while-moving-experimental)** | Canvas & Tokens | ❌ Disabled | Yes |
+| **[Lighter Video Playback](#lighter-video-playback)** | Canvas & Tokens | ❌ Disabled | Yes |
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Debug Mode](#debug-mode)** | Utilities | ❌ Disabled | No |
@@ -92,6 +97,22 @@ Displays colored disposition dots (Friendly, Neutral, Hostile, Secret) next to a
 ### Sidebar Multi-line Names
 Long names of actors, items, scenes and other documents in the right sidebar wrap onto several lines instead of being cut off.
 
+### Lightweight Chat & Sidebar Lists
+*Off by default for now; the GM turns it on in the Settings Dashboard.* Long chat logs and large directories stay responsive: the browser skips drawing chat messages and sidebar entries (actors, items, journals, scenes and so on) that are scrolled out of view, and draws them as they scroll in.
+* **Nothing changes visually**: Messages and entries look and behave the same. The ten newest chat messages are always drawn, so the chat log still ends exactly at the latest message.
+* **Scrollbar**: Until a message or entry has been on screen once, the browser uses an estimated height for it, so the scrollbar can shift slightly the first time you scroll far back.
+* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
+
+### Batched Sidebar Updates (Experimental)
+*Off by default.* This feature changes when Foundry redraws the Combat Tracker and the sidebar directories, so other modules that hook into those redraws may not expect it. If the Combat Tracker or a directory shows outdated information, turn it off and please [report it](https://github.com/nschoenwald/niks-foundry-tweaks/issues).
+
+Cuts the redrawing the sidebar does in busy moments:
+* **Combat Tracker**: An area spell that damages eight creatures used to redraw the whole Combat Tracker eight times in a row. Updates that arrive within a tenth of a second are now combined into one redraw. Turn changes still redraw right away and scroll the active combatant into view.
+* **Directories**: Creating, deleting or renaming many documents at once (Actors, Items, Journal, Scenes, Roll Tables, Cards, Playlists, Macros) redraws the directory once instead of once per document.
+* **Closed tabs**: A sidebar tab that isn't open isn't redrawn in the background. It catches up when you open it. Popped-out tabs always stay up to date.
+* **Folder lists**: Changing values like hit points or item uses no longer rebuilds the whole Actors or Items folder list, which takes noticeable time in worlds with many documents and folders.
+* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
+
 ### Sync Browser Tab Title
 Dynamically updates the browser tab title with the name of the active scene being viewed.
 
@@ -116,6 +137,28 @@ Improves teleport preset destination picking (*Misty Step*, *Dimension Door*):
 * Snaps a translucent ghost token preview to the grid featuring the character's authentic dynamic token ring and rune colors.
 * Real-time status badges for valid range, out-of-range, and wall collision.
 * Uninterrupted right-click canvas panning and clean <kbd>ESC</kbd> / Cancel flow.
+
+### Idle Frame Rate
+*Off by default; the GM turns it on in the Settings Dashboard.* Lowers the canvas frame rate while nobody interacts with the game and nothing moves, which saves battery, heat and fan noise while the table talks.
+* **Idle**: no mouse movement, clicks, scrolling or key presses, no token movement, pings or camera pans, and no new chat messages or changes to tokens, tiles, lights, templates and the like, for the chosen time (default 30 seconds).
+* **Waking up**: the next activity restores your normal frame rate (Foundry's **Maximum Framerate** setting) immediately. Pings from other players wake it within a quarter of a second.
+* **While idle**: animated lights, animated maps and effects keep running at the lower frame rate (default 20 FPS), so they move less smoothly until the next activity.
+* **Personal**: each player can turn it off and choose the idle frame rate and delay under Personal Preferences.
+* Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
+
+### Throttled Vision Updates While Moving (Experimental)
+*Off by default.* With Foundry's **Animate Token Vision** setting on, a moving token's vision and light are recalculated against every wall on every frame of the movement, which can make token movement stutter in scenes with many walls. This feature recalculates them a limited number of times per second instead (default 20). The final position is always calculated exactly.
+* **Trade-off**: vision edges can trail slightly behind fast-moving tokens, and a token moving very quickly past a narrow opening may reveal a little less fog of war than before.
+* **Experimental**: if vision or lighting looks wrong while tokens move, turn it off and please [report it](https://github.com/nschoenwald/niks-foundry-tweaks/issues).
+* **Personal**: each player can turn it off and choose the rate under Personal Preferences.
+* Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
+
+### Lighter Video Playback
+*Off by default; the GM turns it on in the Settings Dashboard.* Animated maps, tiles and tokens (video files such as WebM) normally send every new frame to the graphics card, even when they are off screen. With this feature they stop while they are off screen or hidden (for example on another level) and resume as soon as they come back into view.
+* **Frame rate limit**: optionally shows at most 30, 24, 15 or 10 video frames per second, which saves more on large animated maps but looks choppier. Off by default.
+* **Unchanged**: videos keep playing in the background, so their timing, loops and sound stay the same. Sequencer and Automated Animations effects are not affected.
+* **Personal**: each player can turn it off and set the limit under Personal Preferences.
+* Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
 
 ---
 

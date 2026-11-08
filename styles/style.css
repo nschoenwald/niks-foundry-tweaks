@@ -39,6 +39,27 @@ body.nft-sidebar-name-wrap .directory .directory-item .document-name a {
     overflow: visible;
 }
 
+/* ── Lightweight Chat & Sidebar Lists (lightweight-lists.js) ────────── */
+/* The browser skips layout and painting of chat messages and directory entries outside the visible area.
+   `auto` in contain-intrinsic-block-size remembers each element's real height once it has been shown, so the
+   scrollbar only uses the estimate for entries that were never on screen. Chat notifications (#chat-notifications)
+   have no .chat-scroll and are left alone. Folders are left alone too: they contain their entries. */
+body.nft-lightweight-lists .chat-scroll > .chat-log > .chat-message {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 140px;
+}
+
+/* The newest messages are always laid out for real. Core scrolls to the bottom right after inserting a message,
+   before the browser has decided it is on screen; with the 140px estimate the log would stop short of the end. */
+body.nft-lightweight-lists .chat-scroll > .chat-log > .chat-message:nth-last-child(-n + 10) {
+    content-visibility: visible;
+}
+
+body.nft-lightweight-lists .directory-list .directory-item.entry {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto var(--sidebar-item-height, 48px);
+}
+
 /* ── Toolbar Limitation ─────────────────────────────────────────────── */
 
 #scene-controls .nft-scrollable-toolbar,
