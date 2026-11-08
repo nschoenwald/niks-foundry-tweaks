@@ -109,26 +109,6 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
-                            key: "clientEnableLightweightLists",
-                            introduced: "14.2.0",
-                            pairedWith: "enableLightweightLists",
-                            name: "Lightweight Chat & Sidebar Lists",
-                            hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view (if enabled by the GM). Turn off if the chat log or a directory looks wrong on your screen.",
-                            type: "Boolean",
-                            default: true,
-                            scope: "client"
-                        },
-                        {
-                            key: "clientEnableBatchedSidebarUpdates",
-                            introduced: "14.2.0",
-                            pairedWith: "enableBatchedSidebarUpdates",
-                            name: "Batched Sidebar Updates (Experimental)",
-                            hint: "Combines rapid updates of the sidebar and Combat Tracker into one, and updates closed sidebar tabs when you open them (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
-                            scope: "client"
-                        },
-                        {
                             key: "enableToolbarLimitation",
                             introduced: "14.0.0",
                             docs: "toolbar-limitation",
@@ -156,6 +136,53 @@ export function getSettingsSchema() {
                     title: "Canvas & Templates",
                     icon: "fa-solid fa-shapes",
                     settings: [
+                        {
+                            key: "clientEnableAutoanimationsTeleportUI",
+                            introduced: "14.0.0",
+                            pairedWith: "enableAutoanimationsTeleportUI",
+                            name: "Enhanced Teleport Targeting UI",
+                            hint: "Shows a floating HUD banner, ghost token preview, and allows pressing ESC to cancel when picking an Automated Animations teleport destination (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
+                            key: "clientEnableClearTargetsButton",
+                            introduced: "14.0.0",
+                            pairedWith: "enableClearTargetsButton",
+                            name: "Clear Targets Token Control Button",
+                            hint: "Shows the Clear Targets button in your Token Controls toolbar (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        }
+                    ]
+                },
+                {
+                    id: "clientPerformance",
+                    title: "Performance",
+                    icon: "fa-solid fa-gauge-high",
+                    settings: [
+                        {
+                            key: "clientEnableLightweightLists",
+                            introduced: "14.2.0",
+                            pairedWith: "enableLightweightLists",
+                            name: "Lightweight Chat & Sidebar Lists",
+                            hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view (if enabled by the GM). Turn off if the chat log or a directory looks wrong on your screen.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
+                            key: "clientEnableBatchedSidebarUpdates",
+                            introduced: "14.2.0",
+                            pairedWith: "enableBatchedSidebarUpdates",
+                            name: "Batched Sidebar Updates (Experimental)",
+                            hint: "Combines rapid updates of the sidebar and Combat Tracker into one, and updates closed sidebar tabs when you open them (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
                         {
                             key: "clientEnableIdleFrameRate",
                             introduced: "14.2.0",
@@ -249,26 +276,6 @@ export function getSettingsSchema() {
                             ],
                             scope: "client",
                             parentKey: "clientEnableVideoOptimization"
-                        },
-                        {
-                            key: "clientEnableAutoanimationsTeleportUI",
-                            introduced: "14.0.0",
-                            pairedWith: "enableAutoanimationsTeleportUI",
-                            name: "Enhanced Teleport Targeting UI",
-                            hint: "Shows a floating HUD banner, ghost token preview, and allows pressing ESC to cancel when picking an Automated Animations teleport destination (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
-                            scope: "client"
-                        },
-                        {
-                            key: "clientEnableClearTargetsButton",
-                            introduced: "14.0.0",
-                            pairedWith: "enableClearTargetsButton",
-                            name: "Clear Targets Token Control Button",
-                            hint: "Shows the Clear Targets button in your Token Controls toolbar (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
-                            scope: "client"
                         }
                     ]
                 }
@@ -415,35 +422,6 @@ export function getSettingsSchema() {
                     ]
                 },
                 {
-                    id: "uiPerformance",
-                    title: "Performance",
-                    icon: "fa-solid fa-gauge-high",
-                    settings: [
-                        {
-                            key: "enableLightweightLists",
-                            introduced: "14.2.0",
-                            docs: "lightweight-chat--sidebar-lists",
-                            keywords: ["performance", "lag", "slow", "chat log", "sidebar", "content-visibility"],
-                            name: "Lightweight Chat & Sidebar Lists",
-                            hint: "Lets the browser skip drawing chat messages and sidebar directory entries that are scrolled out of view, so long chat logs and large directories scroll and update faster. Players can turn it off for themselves under Personal Preferences.",
-                            type: "Boolean",
-                            default: false,
-                            scope: "world"
-                        },
-                        {
-                            key: "enableBatchedSidebarUpdates",
-                            introduced: "14.2.0",
-                            docs: "batched-sidebar-updates",
-                            keywords: ["performance", "lag", "slow", "combat tracker", "directory", "render", "experimental"],
-                            name: "Batched Sidebar Updates (Experimental)",
-                            hint: "Experimental: combines rapid updates of the sidebar directories and the Combat Tracker (e.g. an area spell damaging many creatures) into one redraw, updates sidebar tabs that aren't open only when you open them, and skips rebuilding the Actors and Items folder lists when only values like hit points change. Players can turn it off for themselves under Personal Preferences.",
-                            type: "Boolean",
-                            default: false,
-                            scope: "world"
-                        }
-                    ]
-                },
-                {
                     id: "chatLog",
                     title: "Chat Log",
                     icon: "fa-solid fa-comments",
@@ -512,46 +490,6 @@ export function getSettingsSchema() {
                     ]
                 },
                 {
-                    id: "canvasPerformance",
-                    title: "Performance",
-                    icon: "fa-solid fa-gauge-high",
-                    settings: [
-                        {
-                            key: "enableIdleFrameRate",
-                            introduced: "14.2.0",
-                            docs: "idle-frame-rate",
-                            keywords: ["performance", "fps", "battery", "laptop", "fan", "idle", "frame rate"],
-                            name: "Idle Frame Rate",
-                            hint: "Lowers the canvas frame rate while nobody interacts with the game and nothing moves, and returns to the normal frame rate on the next mouse movement, key press, token movement or chat message. Saves battery, heat and fan noise. Players can turn it off and choose the idle frame rate under Personal Preferences.",
-                            type: "Boolean",
-                            default: false,
-                            scope: "world"
-                        },
-                        {
-                            key: "enableVisionUpdateThrottle",
-                            introduced: "14.2.0",
-                            docs: "throttled-vision-updates-while-moving-experimental",
-                            keywords: ["performance", "fps", "vision", "walls", "token movement", "lag", "experimental"],
-                            name: "Throttled Vision Updates While Moving (Experimental)",
-                            hint: "Experimental: while a token moves, recomputes its vision and light a limited number of times per second instead of every frame. Makes token movement smoother in scenes with many walls. The final position is always exact. Requires Foundry's Animate Token Vision setting (otherwise vision only updates at the end of a move anyway). Players can turn it off and choose the rate under Personal Preferences.",
-                            type: "Boolean",
-                            default: false,
-                            scope: "world"
-                        },
-                        {
-                            key: "enableVideoOptimization",
-                            introduced: "14.2.0",
-                            docs: "lighter-video-playback",
-                            keywords: ["performance", "fps", "video", "webm", "animated map", "animated tile"],
-                            name: "Lighter Video Playback",
-                            hint: "Animated maps, tiles and tokens stop sending new frames to the graphics card while they are off screen or hidden, and can be limited to fewer frames per second. Videos keep playing, so timing and sound are unchanged. Players can turn it off and set the limit under Personal Preferences.",
-                            type: "Boolean",
-                            default: false,
-                            scope: "world"
-                        }
-                    ]
-                },
-                {
                     id: "templates",
                     title: "Templates & Placement",
                     icon: "fa-solid fa-shapes",
@@ -592,6 +530,84 @@ export function getSettingsSchema() {
                             hint: "Automatically adds new tokens to the active combat encounter when created or dragged to the canvas during combat.",
                             type: "Boolean",
                             default: true,
+                            scope: "world"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            id: "performance",
+            order: 90,
+            label: "Performance",
+            icon: "fa-solid fa-gauge-high",
+            description: "Optional optimizations for slow computers, large worlds and busy scenes. Off by default; players can turn them off for themselves under Personal Preferences.",
+            sections: [
+                {
+                    id: "performanceInterface",
+                    title: "Interface",
+                    icon: "fa-solid fa-table-columns",
+                    settings: [
+                        {
+                            key: "enableLightweightLists",
+                            introduced: "14.2.0",
+                            docs: "lightweight-chat--sidebar-lists",
+                            keywords: ["performance", "lag", "slow", "chat log", "sidebar", "content-visibility"],
+                            name: "Lightweight Chat & Sidebar Lists",
+                            hint: "Lets the browser skip drawing chat messages and sidebar directory entries that are scrolled out of view, so long chat logs and large directories scroll and update faster. Players can turn it off for themselves under Personal Preferences.",
+                            type: "Boolean",
+                            default: false,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableBatchedSidebarUpdates",
+                            introduced: "14.2.0",
+                            docs: "batched-sidebar-updates",
+                            keywords: ["performance", "lag", "slow", "combat tracker", "directory", "render", "experimental"],
+                            name: "Batched Sidebar Updates (Experimental)",
+                            hint: "Experimental: combines rapid updates of the sidebar directories and the Combat Tracker (e.g. an area spell damaging many creatures) into one redraw, updates sidebar tabs that aren't open only when you open them, and skips rebuilding the Actors and Items folder lists when only values like hit points change. Players can turn it off for themselves under Personal Preferences.",
+                            type: "Boolean",
+                            default: false,
+                            scope: "world"
+                        }
+                    ]
+                },
+                {
+                    id: "performanceCanvas",
+                    title: "Canvas",
+                    icon: "fa-solid fa-map",
+                    settings: [
+                        {
+                            key: "enableIdleFrameRate",
+                            introduced: "14.2.0",
+                            docs: "idle-frame-rate",
+                            keywords: ["performance", "fps", "battery", "laptop", "fan", "idle", "frame rate"],
+                            name: "Idle Frame Rate",
+                            hint: "Lowers the canvas frame rate while nobody interacts with the game and nothing moves, and returns to the normal frame rate on the next mouse movement, key press, token movement or chat message. Saves battery, heat and fan noise. Players can turn it off and choose the idle frame rate under Personal Preferences.",
+                            type: "Boolean",
+                            default: false,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableVisionUpdateThrottle",
+                            introduced: "14.2.0",
+                            docs: "throttled-vision-updates-while-moving-experimental",
+                            keywords: ["performance", "fps", "vision", "walls", "token movement", "lag", "experimental"],
+                            name: "Throttled Vision Updates While Moving (Experimental)",
+                            hint: "Experimental: while a token moves, recomputes its vision and light a limited number of times per second instead of every frame. Makes token movement smoother in scenes with many walls. The final position is always exact. Requires Foundry's Animate Token Vision setting (otherwise vision only updates at the end of a move anyway). Players can turn it off and choose the rate under Personal Preferences.",
+                            type: "Boolean",
+                            default: false,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableVideoOptimization",
+                            introduced: "14.2.0",
+                            docs: "lighter-video-playback",
+                            keywords: ["performance", "fps", "video", "webm", "animated map", "animated tile"],
+                            name: "Lighter Video Playback",
+                            hint: "Animated maps, tiles and tokens stop sending new frames to the graphics card while they are off screen or hidden, and can be limited to fewer frames per second. Videos keep playing, so timing and sound are unchanged. Players can turn it off and set the limit under Personal Preferences.",
+                            type: "Boolean",
+                            default: false,
                             scope: "world"
                         }
                     ]

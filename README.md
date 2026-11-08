@@ -22,6 +22,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 - [🎨 UI & Visuals](#-ui--visuals)
 - [🎯 Canvas & Tokens](#-canvas--tokens)
 - [🏁 Combat Flow](#-combat-flow)
+- [⚡ Performance](#-performance)
 - [🔧 Utilities](#-utilities)
 - [🛠️ Silent Core Patches](#️-silent-core-patches)
 - [⚙️ Settings Dashboard & Personal Preferences](#️-settings-dashboard--personal-preferences)
@@ -44,18 +45,18 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Hide Private GM Rolls from Players](#hide-private-gm-rolls-from-players)** | UI & Visuals | ✅ Enabled | No |
 | **[Actor Directory Disposition Dots](#actor-directory-disposition-dots)** | UI & Visuals | ✅ Enabled | No |
 | **[Sidebar Multi-line Names](#sidebar-multi-line-names)** | UI & Visuals | ✅ Enabled | No |
-| **[Lightweight Chat & Sidebar Lists](#lightweight-chat--sidebar-lists)** | UI & Visuals | ❌ Disabled | Yes |
-| **[Batched Sidebar Updates (Experimental)](#batched-sidebar-updates-experimental)** | UI & Visuals | ❌ Disabled | Yes |
 | **[Sync Browser Tab Title](#sync-browser-tab-title)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Toolbar Limitation](#toolbar-limitation)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Carolingian UI Theme Harmony](#carolingian-ui-theme-harmony)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clear Targets Token Control Button](#clear-targets-token-control-button)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Disable Underground Token Hiding](#disable-underground-token-hiding)** | Canvas & Tokens | ❌ Disabled | No |
 | **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations)** | Canvas & Tokens | ✅ Enabled | Yes |
-| **[Idle Frame Rate](#idle-frame-rate)** | Canvas & Tokens | ❌ Disabled | Yes |
-| **[Throttled Vision Updates While Moving (Experimental)](#throttled-vision-updates-while-moving-experimental)** | Canvas & Tokens | ❌ Disabled | Yes |
-| **[Lighter Video Playback](#lighter-video-playback)** | Canvas & Tokens | ❌ Disabled | Yes |
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
+| **[Lightweight Chat & Sidebar Lists](#lightweight-chat--sidebar-lists)** | Performance | ❌ Disabled | Yes |
+| **[Batched Sidebar Updates (Experimental)](#batched-sidebar-updates-experimental)** | Performance | ❌ Disabled | Yes |
+| **[Idle Frame Rate](#idle-frame-rate)** | Performance | ❌ Disabled | Yes |
+| **[Throttled Vision Updates While Moving (Experimental)](#throttled-vision-updates-while-moving-experimental)** | Performance | ❌ Disabled | Yes |
+| **[Lighter Video Playback](#lighter-video-playback)** | Performance | ❌ Disabled | Yes |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Debug Mode](#debug-mode)** | Utilities | ❌ Disabled | No |
 
@@ -97,22 +98,6 @@ Displays colored disposition dots (Friendly, Neutral, Hostile, Secret) next to a
 ### Sidebar Multi-line Names
 Long names of actors, items, scenes and other documents in the right sidebar wrap onto several lines instead of being cut off.
 
-### Lightweight Chat & Sidebar Lists
-*Off by default for now; the GM turns it on in the Settings Dashboard.* Long chat logs and large directories stay responsive: the browser skips drawing chat messages and sidebar entries (actors, items, journals, scenes and so on) that are scrolled out of view, and draws them as they scroll in.
-* **Nothing changes visually**: Messages and entries look and behave the same. The ten newest chat messages are always drawn, so the chat log still ends exactly at the latest message.
-* **Scrollbar**: Until a message or entry has been on screen once, the browser uses an estimated height for it, so the scrollbar can shift slightly the first time you scroll far back.
-* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
-
-### Batched Sidebar Updates (Experimental)
-*Off by default.* This feature changes when Foundry redraws the Combat Tracker and the sidebar directories, so other modules that hook into those redraws may not expect it. If the Combat Tracker or a directory shows outdated information, turn it off and please [report it](https://github.com/nschoenwald/niks-foundry-tweaks/issues).
-
-Cuts the redrawing the sidebar does in busy moments:
-* **Combat Tracker**: An area spell that damages eight creatures used to redraw the whole Combat Tracker eight times in a row. Updates that arrive within a tenth of a second are now combined into one redraw. Turn changes still redraw right away and scroll the active combatant into view.
-* **Directories**: Creating, deleting or renaming many documents at once (Actors, Items, Journal, Scenes, Roll Tables, Cards, Playlists, Macros) redraws the directory once instead of once per document.
-* **Closed tabs**: A sidebar tab that isn't open isn't redrawn in the background. It catches up when you open it. Popped-out tabs always stay up to date.
-* **Folder lists**: Changing values like hit points or item uses no longer rebuilds the whole Actors or Items folder list, which takes noticeable time in worlds with many documents and folders.
-* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
-
 ### Sync Browser Tab Title
 Dynamically updates the browser tab title with the name of the active scene being viewed.
 
@@ -138,6 +123,35 @@ Improves teleport preset destination picking (*Misty Step*, *Dimension Door*):
 * Real-time status badges for valid range, out-of-range, and wall collision.
 * Uninterrupted right-click canvas panning and clean <kbd>ESC</kbd> / Cancel flow.
 
+---
+
+## 🏁 Combat Flow
+
+### Auto-Add Tokens to Combat
+Tokens created or dragged onto the scene while a combat is running are added to the combat automatically. System modules can leave some tokens out (Nik's DnD5e Tweaks leaves out summoned creatures).
+
+---
+
+## ⚡ Performance
+
+Optional optimizations for slow computers, large worlds and busy scenes, in their own **Performance** tab of the Settings Dashboard. They are off by default: the GM turns them on, and each player can turn them off for themselves under Personal Preferences.
+
+### Lightweight Chat & Sidebar Lists
+*Off by default for now; the GM turns it on in the Settings Dashboard.* Long chat logs and large directories stay responsive: the browser skips drawing chat messages and sidebar entries (actors, items, journals, scenes and so on) that are scrolled out of view, and draws them as they scroll in.
+* **Nothing changes visually**: Messages and entries look and behave the same. The ten newest chat messages are always drawn, so the chat log still ends exactly at the latest message.
+* **Scrollbar**: Until a message or entry has been on screen once, the browser uses an estimated height for it, so the scrollbar can shift slightly the first time you scroll far back.
+* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
+
+### Batched Sidebar Updates (Experimental)
+*Off by default.* This feature changes when Foundry redraws the Combat Tracker and the sidebar directories, so other modules that hook into those redraws may not expect it. If the Combat Tracker or a directory shows outdated information, turn it off and please [report it](https://github.com/nschoenwald/niks-foundry-tweaks/issues).
+
+Cuts the redrawing the sidebar does in busy moments:
+* **Combat Tracker**: An area spell that damages eight creatures used to redraw the whole Combat Tracker eight times in a row. Updates that arrive within a tenth of a second are now combined into one redraw. Turn changes still redraw right away and scroll the active combatant into view.
+* **Directories**: Creating, deleting or renaming many documents at once (Actors, Items, Journal, Scenes, Roll Tables, Cards, Playlists, Macros) redraws the directory once instead of once per document.
+* **Closed tabs**: A sidebar tab that isn't open isn't redrawn in the background. It catches up when you open it. Popped-out tabs always stay up to date.
+* **Folder lists**: Changing values like hit points or item uses no longer rebuilds the whole Actors or Items folder list, which takes noticeable time in worlds with many documents and folders.
+* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
+
 ### Idle Frame Rate
 *Off by default; the GM turns it on in the Settings Dashboard.* Lowers the canvas frame rate while nobody interacts with the game and nothing moves, which saves battery, heat and fan noise while the table talks.
 * **Idle**: no mouse movement, clicks, scrolling or key presses, no token movement, pings or camera pans, and no new chat messages or changes to tokens, tiles, lights, templates and the like, for the chosen time (default 30 seconds).
@@ -159,13 +173,6 @@ Improves teleport preset destination picking (*Misty Step*, *Dimension Door*):
 * **Unchanged**: videos keep playing in the background, so their timing, loops and sound stay the same. Sequencer and Automated Animations effects are not affected.
 * **Personal**: each player can turn it off and set the limit under Personal Preferences.
 * Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
-
----
-
-## 🏁 Combat Flow
-
-### Auto-Add Tokens to Combat
-Tokens created or dragged onto the scene while a combat is running are added to the combat automatically. System modules can leave some tokens out (Nik's DnD5e Tweaks leaves out summoned creatures).
 
 ---
 
@@ -194,7 +201,7 @@ All features of this module, and of system modules such as Nik's DnD5e Tweaks, a
 
 **Finding settings**
 * **Overview**: The first tab shows every feature as a card with a one-line summary, whether it is on, and a switch to turn it on or off. Click a feature's name to jump to all its options.
-* **Tabs**: Settings are grouped by topic (UI & Visuals, Canvas & Tokens, Combat Flow, Utilities & Debug, and Personal Preferences); system modules add their settings to the same tabs and can add tabs of their own. Settings from a system module carry a small badge (e.g. **5e**).
+* **Tabs**: Settings are grouped by topic (UI & Visuals, Canvas & Tokens, Combat Flow, Performance, Utilities & Debug, and Personal Preferences); system modules add their settings to the same tabs and can add tabs of their own. Settings from a system module carry a small badge (e.g. **5e**).
 * **Search**: Finds settings by name, description and related terms. Words can be in any order. Matches are highlighted and every tab with results shows how many it has. Press <kbd>Enter</kbd> to jump to the first one, <kbd>Esc</kbd> to clear the search.
 * **Quick filters**: Show only settings that are **Changed** from their default, **New** since you last opened the dashboard, **Turned Off**, that **Need a Reload**, or that are **Handled Elsewhere** by another module. Filters combine with each other and with the search.
 * **Short or full descriptions**: Descriptions take one line by default; click one to read it in full, or switch to full descriptions in the header.
@@ -234,7 +241,7 @@ Hooks.once("niksTweaks.register", (api) => {
 
 * Register the settings themselves with `game.settings.register` as usual; the schema only describes how the dashboard shows them.
 * Your module doesn't need its own Configure Settings entry: the dashboard opens from Nik's Foundry Tweaks. If you want one anyway, register a menu with `type: api.SettingsApp` under the key `settingsDashboard` (it then shows the "N new" count too).
-* Reuse core's tab and section ids to place settings next to related ones, or add your own tab (give it an `order`; core uses 0, 10, 20, 30 and 100 for Utilities & Debug).
+* Reuse core's tab and section ids to place settings next to related ones, or add your own tab (give it an `order`; core uses 0, 10, 20, 30, 90 for Performance and 100 for Utilities & Debug).
 * Extensions core reads: `contextMenuStyling` (`deleteLabels`, `duplicateLabels`, `violetLabels`, `backgroundVars`), `hidePrivateGMRolls` (`isRoll(message)`), `autoAddTokensToCombat` (`skipToken(tokenDocument)`), `carolingianHarmony` (`combatantClass(combatant)`), `readableTextSize` (`chat: true` when your stylesheet covers chat cards).
 * Helpers: `api.createContext({ moduleId, label, debugNamespace: "niks-foundry-tweaks" })` (logging, cached setting reads, feature checks following the shared Debug Mode) and `api.attachHudPositioning(element)` (keeps a floating banner centered on the visible canvas).
 

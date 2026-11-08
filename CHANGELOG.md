@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.2.1] - 2026-11-08
+### Changed
+- **Performance settings**: The five performance features from 14.2.0 now have their own **Performance** tab in the Settings Dashboard, and the players' personal options for them are grouped in one Performance section under Personal Preferences. Nothing else changes: your settings stay as they are.
+
 ## [14.2.0] - 2026-11-08
 ### Added
 - **Lightweight Chat & Sidebar Lists**: Long chat logs and large directories scroll and update faster. The browser skips drawing chat messages and sidebar entries that are out of view. Nothing changes visually. Off by default for now: the GM can turn it on in the Settings Dashboard, and players can turn it off for themselves.
