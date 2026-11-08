@@ -18,8 +18,10 @@
  * Maximum Framerate setting), and its deferred caching runs on `PIXI.Ticker.shared`, which this feature doesn't touch.
  *
  * @introduced v14.2.0
+ * @updated v14.2.2 (Personal setting can also turn it on when the GM left it off: Use World Setting / On / Off)
  */
-import { MODULE_ID, debug, getSetting, isFeatureActive, clearSettingsCache } from "../../context.js";
+import { MODULE_ID, debug, getSetting, clearSettingsCache } from "../../context.js";
+import { isFeatureOnForUser } from "../../utils/personal-override.js";
 
 /**
  * How often to check for idle / running animations. Short, so animations without a document change (pings from
@@ -125,10 +127,10 @@ function addListeners() {
  * Turns the feature on or off following the world and personal settings. Safe to call repeatedly.
  */
 export function updateIdleFrameRate() {
-    for (const key of ["enableIdleFrameRate", "clientEnableIdleFrameRate", "idleFrameRate", "idleFrameRateDelay"]) {
+    for (const key of ["enableIdleFrameRate", "clientIdleFrameRate", "idleFrameRate", "idleFrameRateDelay"]) {
         clearSettingsCache(`${MODULE_ID}.${key}`);
     }
-    _active = isFeatureActive("enableIdleFrameRate", "clientEnableIdleFrameRate");
+    _active = isFeatureOnForUser("enableIdleFrameRate", "clientIdleFrameRate");
     if (_active) {
         addListeners();
         _lastActivity = performance.now();

@@ -175,7 +175,7 @@
 
                                     {{#if this.pairKey}}
                                     {{#if this.isClient}}
-                                    <button type="button" class="nft-pair-chip" data-action="revealSetting" data-key="{{this.pairKey}}" data-pair="{{this.pairKey}}" data-tooltip="{{#if @root.canModify}}The world setting for everyone. If it is off, your choice has no effect. Click to go there.{{else}}Set by the GM for everyone. If it is off, your choice has no effect.{{/if}}">
+                                    <button type="button" class="nft-pair-chip" data-action="revealSetting" data-key="{{this.pairKey}}" data-pair="{{this.pairKey}}" data-tooltip="{{#if this.overridesWorld}}{{#if @root.canModify}}The world setting is the default for everyone. Use World Setting follows it; On or Off overrides it on your screen. Click to go there.{{else}}The GM's default for everyone. Use World Setting follows it; On or Off overrides it on your screen.{{/if}}{{else}}{{#if @root.canModify}}The world setting for everyone. If it is off, your choice has no effect. Click to go there.{{else}}Set by the GM for everyone. If it is off, your choice has no effect.{{/if}}{{/if}}">
                                         <i class="fa-solid fa-globe" inert></i> World: <span class="nft-pair-value"></span>
                                     </button>
                                     {{else}}

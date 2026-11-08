@@ -80,6 +80,45 @@ export function migrateClientSettings() {
     if (copied) log(`Copied ${copied} personal setting(s) from Nik's DnD5e Tweaks.`);
 }
 
+/** Personal opt-outs of the 14.2.0 performance features (Boolean) and the override settings replacing them in 14.2.2. */
+const PERFORMANCE_OPT_OUTS = Object.freeze({
+    clientEnableLightweightLists: "clientLightweightLists",
+    clientEnableBatchedSidebarUpdates: "clientBatchedSidebarUpdates",
+    clientEnableIdleFrameRate: "clientIdleFrameRate",
+    clientEnableVisionUpdateThrottle: "clientVisionUpdateThrottle",
+    clientEnableVideoOptimization: "clientVideoOptimization"
+});
+
+/**
+ * Converts the personal opt-outs of 14.2.0 / 14.2.1 into the personal overrides of 14.2.2: a player who had turned a
+ * feature off keeps it off ("off"); everyone else follows the world setting ("world", the default, nothing stored).
+ * Removes the old keys afterwards, so it runs only once per browser. Runs during `init`, before features read them.
+ *
+ * @introduced v14.2.2
+ */
+export function migratePerformanceOptOuts() {
+    const store = game.settings.storage.get("client");
+    let converted = 0;
+    for (const [oldKey, newKey] of Object.entries(PERFORMANCE_OPT_OUTS)) {
+        const oldId = `${MODULE_ID}.${oldKey}`;
+        const raw = store.getItem(oldId);
+        if (raw === null) continue;
+        const newId = `${MODULE_ID}.${newKey}`;
+        let wasOff = false;
+        try {
+            wasOff = JSON.parse(raw) === false;
+        } catch {
+            wasOff = raw === "false";
+        }
+        if (wasOff && (store.getItem(newId) === null)) {
+            store.setItem(newId, JSON.stringify("off"));
+            converted++;
+        }
+        store.removeItem(oldId);
+    }
+    if (converted) log(`Kept ${converted} performance feature(s) turned off on this screen (personal settings changed to Use World Setting / On / Off).`);
+}
+
 /**
  * Versions this user last saw in Nik's DnD5e Tweaks' dashboard: its per-module object (14.69.0) or the single
  * version it stored before.

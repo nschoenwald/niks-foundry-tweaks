@@ -20,8 +20,10 @@
  * Compatibility: Prime Performance doesn't wrap token animation, `initializeSources` or perception.
  *
  * @introduced v14.2.0
+ * @updated v14.2.2 (Personal setting can also turn it on when the GM left it off: Use World Setting / On / Off)
  */
-import { MODULE_ID, debug, getSetting, isFeatureActive, clearSettingsCache } from "../../context.js";
+import { MODULE_ID, debug, getSetting, clearSettingsCache } from "../../context.js";
+import { isFeatureOnForUser } from "../../utils/personal-override.js";
 import { patchMethod } from "../../utils/patch-helper.js";
 
 let _active = false;
@@ -107,10 +109,10 @@ function registerPatches() {
  * Turns the feature on or off following the world and personal settings. Safe to call repeatedly.
  */
 export function updateVisionUpdateThrottle() {
-    for (const key of ["enableVisionUpdateThrottle", "clientEnableVisionUpdateThrottle", "visionUpdateRate"]) {
+    for (const key of ["enableVisionUpdateThrottle", "clientVisionUpdateThrottle", "visionUpdateRate"]) {
         clearSettingsCache(`${MODULE_ID}.${key}`);
     }
-    _active = isFeatureActive("enableVisionUpdateThrottle", "clientEnableVisionUpdateThrottle");
+    _active = isFeatureOnForUser("enableVisionUpdateThrottle", "clientVisionUpdateThrottle");
     if (_active) registerPatches();
     debug(`Throttled Vision Updates While Moving ${_active ? "enabled" : "disabled"}`);
 }

@@ -134,13 +134,13 @@ Tokens created or dragged onto the scene while a combat is running are added to 
 
 ## ⚡ Performance
 
-Optional optimizations for slow computers, large worlds and busy scenes, in their own **Performance** tab of the Settings Dashboard. They are off by default: the GM turns them on, and each player can turn them off for themselves under Personal Preferences.
+Optional optimizations for slow computers, large worlds and busy scenes, in their own **Performance** tab of the Settings Dashboard. The GM sets the default for everyone (off unless turned on). Since they only affect each player's own computer, every player can override it under Personal Preferences: **Use World Setting** (default) follows the GM, **On** turns a feature on for them even if the GM left it off, **Off** turns it off for them.
 
 ### Lightweight Chat & Sidebar Lists
-*Off by default for now; the GM turns it on in the Settings Dashboard.* Long chat logs and large directories stay responsive: the browser skips drawing chat messages and sidebar entries (actors, items, journals, scenes and so on) that are scrolled out of view, and draws them as they scroll in.
+*Off by default for now.* Long chat logs and large directories stay responsive: the browser skips drawing chat messages and sidebar entries (actors, items, journals, scenes and so on) that are scrolled out of view, and draws them as they scroll in.
 * **Nothing changes visually**: Messages and entries look and behave the same. The ten newest chat messages are always drawn, so the chat log still ends exactly at the latest message.
 * **Scrollbar**: Until a message or entry has been on screen once, the browser uses an estimated height for it, so the scrollbar can shift slightly the first time you scroll far back.
-* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
+* **Personal Override**: Players can turn it on or off for themselves under Personal Preferences.
 
 ### Batched Sidebar Updates (Experimental)
 *Off by default.* This feature changes when Foundry redraws the Combat Tracker and the sidebar directories, so other modules that hook into those redraws may not expect it. If the Combat Tracker or a directory shows outdated information, turn it off and please [report it](https://github.com/nschoenwald/niks-foundry-tweaks/issues).
@@ -150,28 +150,28 @@ Cuts the redrawing the sidebar does in busy moments:
 * **Directories**: Creating, deleting or renaming many documents at once (Actors, Items, Journal, Scenes, Roll Tables, Cards, Playlists, Macros) redraws the directory once instead of once per document.
 * **Closed tabs**: A sidebar tab that isn't open isn't redrawn in the background. It catches up when you open it. Popped-out tabs always stay up to date.
 * **Folder lists**: Changing values like hit points or item uses no longer rebuilds the whole Actors or Items folder list, which takes noticeable time in worlds with many documents and folders.
-* **Personal Override**: Players can turn it off for themselves under Personal Preferences.
+* **Personal Override**: Players can turn it on or off for themselves under Personal Preferences.
 
 ### Idle Frame Rate
-*Off by default; the GM turns it on in the Settings Dashboard.* Lowers the canvas frame rate while nobody interacts with the game and nothing moves, which saves battery, heat and fan noise while the table talks.
+*Off by default.* Lowers the canvas frame rate while nobody interacts with the game and nothing moves, which saves battery, heat and fan noise while the table talks.
 * **Idle**: no mouse movement, clicks, scrolling or key presses, no token movement, pings or camera pans, and no new chat messages or changes to tokens, tiles, lights, templates and the like, for the chosen time (default 30 seconds).
 * **Waking up**: the next activity restores your normal frame rate (Foundry's **Maximum Framerate** setting) immediately. Pings from other players wake it within a quarter of a second.
 * **While idle**: animated lights, animated maps and effects keep running at the lower frame rate (default 20 FPS), so they move less smoothly until the next activity.
-* **Personal**: each player can turn it off and choose the idle frame rate and delay under Personal Preferences.
+* **Personal**: each player can turn it on or off for themselves and choose the idle frame rate and delay under Personal Preferences.
 * Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
 
 ### Throttled Vision Updates While Moving (Experimental)
 *Off by default.* With Foundry's **Animate Token Vision** setting on, a moving token's vision and light are recalculated against every wall on every frame of the movement, which can make token movement stutter in scenes with many walls. This feature recalculates them a limited number of times per second instead (default 20). The final position is always calculated exactly.
 * **Trade-off**: vision edges can trail slightly behind fast-moving tokens, and a token moving very quickly past a narrow opening may reveal a little less fog of war than before.
 * **Experimental**: if vision or lighting looks wrong while tokens move, turn it off and please [report it](https://github.com/nschoenwald/niks-foundry-tweaks/issues).
-* **Personal**: each player can turn it off and choose the rate under Personal Preferences.
+* **Personal**: each player can turn it on or off for themselves and choose the rate under Personal Preferences.
 * Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
 
 ### Lighter Video Playback
-*Off by default; the GM turns it on in the Settings Dashboard.* Animated maps, tiles and tokens (video files such as WebM) normally send every new frame to the graphics card, even when they are off screen. With this feature they stop while they are off screen or hidden (for example on another level) and resume as soon as they come back into view.
+*Off by default.* Animated maps, tiles and tokens (video files such as WebM) normally send every new frame to the graphics card, even when they are off screen. With this feature they stop while they are off screen or hidden (for example on another level) and resume as soon as they come back into view.
 * **Frame rate limit**: optionally shows at most 30, 24, 15 or 10 video frames per second, which saves more on large animated maps but looks choppier. Off by default.
 * **Unchanged**: videos keep playing in the background, so their timing, loops and sound stay the same. Sequencer and Automated Animations effects are not affected.
-* **Personal**: each player can turn it off and set the limit under Personal Preferences.
+* **Personal**: each player can turn it on or off for themselves and set the limit under Personal Preferences.
 * Works together with [Prime Performance](https://foundryvtt.com/packages/fvtt-perf-optim).
 
 ---
@@ -209,7 +209,7 @@ All features of this module, and of system modules such as Nik's DnD5e Tweaks, a
 
 **Discovering features**
 * **New since you last looked**: The Overview lists settings added since you last opened the dashboard, they carry a **New** badge, and each tab shows how many new settings it holds.
-* **World and personal settings are linked**: A world setting that players can change for themselves shows *Personal: …* with your own choice; the personal setting shows *World: …* and is dimmed when the world setting is off, since it has no effect then. Click either to jump to the other.
+* **World and personal settings are linked**: A world setting that players can change for themselves shows *Personal: …* with your own choice; the personal setting shows *World: …* and is dimmed when the world setting is off, since it has no effect then. Personal settings that can override the world setting (Readable Text Size and the Performance features, with **Use World Setting / On / Off**) are not dimmed. Click either to jump to the other.
 * **Deep links**: Macros and other modules can open the dashboard at a setting with `game.modules.get("niks-foundry-tweaks").api.openSettings("settingKey")`.
 
 **Changing settings**

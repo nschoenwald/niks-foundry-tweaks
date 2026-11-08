@@ -21,8 +21,10 @@
  * its mesh fitting), so both work together.
  *
  * @introduced v14.2.0
+ * @updated v14.2.2 (Personal setting can also turn it on when the GM left it off: Use World Setting / On / Off)
  */
-import { MODULE_ID, debug, getSetting, isFeatureActive, clearSettingsCache } from "../../context.js";
+import { MODULE_ID, debug, getSetting, clearSettingsCache } from "../../context.js";
+import { isFeatureOnForUser } from "../../utils/personal-override.js";
 
 /** How often the list of video meshes is rebuilt. */
 const COLLECT_INTERVAL_MS = 1000;
@@ -178,11 +180,11 @@ function ensureTicker() {
  * Turns the feature on or off following the world and personal settings. Safe to call repeatedly.
  */
 export function updateVideoOptimization() {
-    for (const key of ["enableVideoOptimization", "clientEnableVideoOptimization", "videoFrameRateCap"]) {
+    for (const key of ["enableVideoOptimization", "clientVideoOptimization", "videoFrameRateCap"]) {
         clearSettingsCache(`${MODULE_ID}.${key}`);
     }
     const wasActive = _active;
-    _active = isFeatureActive("enableVideoOptimization", "clientEnableVideoOptimization");
+    _active = isFeatureOnForUser("enableVideoOptimization", "clientVideoOptimization");
     if (_active) {
         if (canvas?.app?.ticker) ensureTicker();
         _lastCollect = -Infinity; // apply a changed cap on the next frame

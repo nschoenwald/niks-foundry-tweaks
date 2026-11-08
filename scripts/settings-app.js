@@ -413,6 +413,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
                         defaultLabel: ["FilePicker", "String"].includes(s.type) && !s.list ? "" : valueLabel(s, s.default),
                         docsUrl: docsFor(s),
                         pairKey: s.pairedWith ?? clientFor.get(s.key) ?? null,
+                        overridesWorld: Boolean(s.overridesWorld),
                         searchText: [s.name, s.hint, tab.label, sec.title, s.settingKey, ...keywords].join(" ").toLowerCase()
                     });
                 }
@@ -773,7 +774,9 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             if (label) label.textContent = valueLabel(pair, value);
             chip.classList.toggle("off", off);
             const row = chip.closest(".nft-setting-row");
-            if (row && (pair.scope === "world")) row.classList.toggle("nft-world-off", off);
+            // A personal setting that can override the world setting still works while the world setting is off
+            const own = row ? this.#settingsByKey.get(row.dataset.key) : null;
+            if (row && (pair.scope === "world")) row.classList.toggle("nft-world-off", off && !own?.overridesWorld);
         }
 
         // Overview cards

@@ -20,8 +20,10 @@
  *    none of the keys the tree depends on (name, sort, folder, ownership).
  *
  * @introduced v14.2.0
+ * @updated v14.2.2 (Personal setting can also turn it on when the GM left it off: Use World Setting / On / Off)
  */
-import { MODULE_ID, debug, isFeatureActive, clearSettingsCache } from "../../context.js";
+import { MODULE_ID, debug, clearSettingsCache } from "../../context.js";
+import { isFeatureOnForUser } from "../../utils/personal-override.js";
 import { patchMethod } from "../../utils/patch-helper.js";
 
 /** Requests within this many milliseconds after a render are merged into one render. */
@@ -54,7 +56,7 @@ const _states = new WeakMap();
 /** Whether the patches are registered (they stay registered; turning the feature off makes them pass through). */
 let _patched = false;
 
-/** Cached result of isFeatureActive, refreshed by updateBatchedSidebarUpdates(). */
+/** Cached on/off state, refreshed by updateBatchedSidebarUpdates(). */
 let _active = false;
 
 /**
@@ -303,8 +305,8 @@ function registerPatches() {
  */
 export function updateBatchedSidebarUpdates() {
     clearSettingsCache(`${MODULE_ID}.enableBatchedSidebarUpdates`);
-    clearSettingsCache(`${MODULE_ID}.clientEnableBatchedSidebarUpdates`);
-    const active = isFeatureActive("enableBatchedSidebarUpdates", "clientEnableBatchedSidebarUpdates");
+    clearSettingsCache(`${MODULE_ID}.clientBatchedSidebarUpdates`);
+    const active = isFeatureOnForUser("enableBatchedSidebarUpdates", "clientBatchedSidebarUpdates");
     if (active) registerPatches();
     const wasActive = _active;
     _active = active;

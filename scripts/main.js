@@ -41,11 +41,12 @@ import { initFixMacBatchBuffer } from "./features/patches/fix-mac-batch-buffer.j
 
 // Dashboard, API, migration
 import { MODULE_ID, log, isFeatureActive } from "./context.js";
+import { OVERRIDE_CHOICES } from "./utils/personal-override.js";
 import { NiksTweaksSettingsApp, refreshSettingsMenuBadge } from "./settings-app.js";
 import { registerModule, registerSettings } from "./settings-registry.js";
 import { getSettingsSchema } from "./settings-schema.js";
 import { createApi } from "./api.js";
-import { SOURCE_MODULE_ID, migrateClientSettings, migrateWorldSettings } from "./migration.js";
+import { SOURCE_MODULE_ID, migrateClientSettings, migrateWorldSettings, migratePerformanceOptOuts } from "./migration.js";
 
 export { MODULE_ID };
 
@@ -204,33 +205,36 @@ Hooks.once("init", () => {
         onChange: () => updateReadableTextSize()
     });
 
-    game.settings.register(MODULE_ID, "clientEnableLightweightLists", {
+    game.settings.register(MODULE_ID, "clientLightweightLists", {
         name: "Lightweight Chat & Sidebar Lists (Personal)",
-        hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view (if enabled by the GM).",
+        hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view on your screen. Use World Setting follows the GM.",
         scope: "client",
         config: false,
-        type: Boolean,
-        default: true,
+        type: String,
+        default: "world",
+        choices: OVERRIDE_CHOICES,
         onChange: () => updateLightweightLists()
     });
 
-    game.settings.register(MODULE_ID, "clientEnableBatchedSidebarUpdates", {
+    game.settings.register(MODULE_ID, "clientBatchedSidebarUpdates", {
         name: "Batched Sidebar Updates (Experimental, Personal)",
-        hint: "Combines rapid updates of the sidebar and Combat Tracker into one, and updates closed sidebar tabs when you open them (if enabled by the GM).",
+        hint: "Combines rapid updates of the sidebar and Combat Tracker on your screen, and updates closed sidebar tabs when you open them. Use World Setting follows the GM.",
         scope: "client",
         config: false,
-        type: Boolean,
-        default: true,
+        type: String,
+        default: "world",
+        choices: OVERRIDE_CHOICES,
         onChange: () => updateBatchedSidebarUpdates()
     });
 
-    game.settings.register(MODULE_ID, "clientEnableIdleFrameRate", {
+    game.settings.register(MODULE_ID, "clientIdleFrameRate", {
         name: "Idle Frame Rate (Personal)",
-        hint: "Lowers the canvas frame rate on your screen while nobody interacts and nothing moves (if enabled by the GM).",
+        hint: "Lowers the canvas frame rate on your screen while nobody interacts and nothing moves. Use World Setting follows the GM.",
         scope: "client",
         config: false,
-        type: Boolean,
-        default: true,
+        type: String,
+        default: "world",
+        choices: OVERRIDE_CHOICES,
         onChange: () => updateIdleFrameRate()
     });
 
@@ -256,13 +260,14 @@ Hooks.once("init", () => {
         onChange: () => updateIdleFrameRate()
     });
 
-    game.settings.register(MODULE_ID, "clientEnableVisionUpdateThrottle", {
+    game.settings.register(MODULE_ID, "clientVisionUpdateThrottle", {
         name: "Throttled Vision Updates While Moving (Experimental, Personal)",
-        hint: "Recomputes a moving token's vision and light a limited number of times per second on your screen (if enabled by the GM).",
+        hint: "Recomputes a moving token's vision and light a limited number of times per second on your screen. Use World Setting follows the GM.",
         scope: "client",
         config: false,
-        type: Boolean,
-        default: true,
+        type: String,
+        default: "world",
+        choices: OVERRIDE_CHOICES,
         onChange: () => updateVisionUpdateThrottle()
     });
 
@@ -277,13 +282,14 @@ Hooks.once("init", () => {
         onChange: () => updateVisionUpdateThrottle()
     });
 
-    game.settings.register(MODULE_ID, "clientEnableVideoOptimization", {
+    game.settings.register(MODULE_ID, "clientVideoOptimization", {
         name: "Lighter Video Playback (Personal)",
-        hint: "Stops updating animated maps, tiles and tokens on your screen while they are out of view (if enabled by the GM).",
+        hint: "Stops updating animated maps, tiles and tokens on your screen while they are out of view. Use World Setting follows the GM.",
         scope: "client",
         config: false,
-        type: Boolean,
-        default: true,
+        type: String,
+        default: "world",
+        choices: OVERRIDE_CHOICES,
         onChange: () => updateVideoOptimization()
     });
 
@@ -646,6 +652,7 @@ Hooks.once("init", () => {
 
     // Personal settings stored by Nik's DnD5e Tweaks, before any feature reads them
     migrateClientSettings();
+    migratePerformanceOptOuts();
 
     // Features that need to catch early hooks (scene controls, canvas object classes)
     initDisableUndergroundTokenHiding();

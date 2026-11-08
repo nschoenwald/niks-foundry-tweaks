@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.2.2] - 2026-11-08
+### Changed
+- **Performance features**: Players can now turn each performance feature on for themselves even if the GM left it off, not only off. Their personal setting offers **Use World Setting** (the default, follows the GM), **On** and **Off**. Anyone who had turned a feature off keeps it off.
+
+### Fixed
+- **Settings Dashboard**: The personal Readable Text Size settings are no longer greyed out with "your choice has no effect" when the GM's setting is off. Your choice always applied; only the dashboard said otherwise.
+
 ## [14.2.1] - 2026-11-08
 ### Changed
 - **Performance settings**: The five performance features from 14.2.0 now have their own **Performance** tab in the Settings Dashboard, and the players' personal options for them are grouped in one Performance section under Personal Preferences. Nothing else changes: your settings stay as they are.

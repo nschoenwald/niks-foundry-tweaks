@@ -11,6 +11,7 @@
  * @introduced v14.0.0
  */
 import { getExtensions } from "./settings-registry.js";
+import { overrideSchemaChoices } from "./utils/personal-override.js";
 
 /**
  * Readable Text Size in chat cards needs an add-on that styles its system's chat cards.
@@ -60,6 +61,7 @@ export function getSettingsSchema() {
                                 { value: "comfortable", label: "Comfortable" },
                                 { value: "large", label: "Large" }
                             ],
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
@@ -76,6 +78,7 @@ export function getSettingsSchema() {
                                 { value: "on", label: "On" },
                                 { value: "off", label: "Off" }
                             ],
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
@@ -164,33 +167,39 @@ export function getSettingsSchema() {
                     icon: "fa-solid fa-gauge-high",
                     settings: [
                         {
-                            key: "clientEnableLightweightLists",
+                            key: "clientLightweightLists",
                             introduced: "14.2.0",
                             pairedWith: "enableLightweightLists",
                             name: "Lightweight Chat & Sidebar Lists",
-                            hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view (if enabled by the GM). Turn off if the chat log or a directory looks wrong on your screen.",
-                            type: "Boolean",
-                            default: true,
+                            hint: "Skips drawing chat messages and sidebar entries that are scrolled out of view on your screen. Use World Setting follows the GM.",
+                            type: "Select",
+                            default: "world",
+                            choices: overrideSchemaChoices(),
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
-                            key: "clientEnableBatchedSidebarUpdates",
+                            key: "clientBatchedSidebarUpdates",
                             introduced: "14.2.0",
                             pairedWith: "enableBatchedSidebarUpdates",
                             name: "Batched Sidebar Updates (Experimental)",
-                            hint: "Combines rapid updates of the sidebar and Combat Tracker into one, and updates closed sidebar tabs when you open them (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
+                            hint: "Combines rapid updates of the sidebar and Combat Tracker on your screen, and updates closed sidebar tabs when you open them. Use World Setting follows the GM.",
+                            type: "Select",
+                            default: "world",
+                            choices: overrideSchemaChoices(),
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
-                            key: "clientEnableIdleFrameRate",
+                            key: "clientIdleFrameRate",
                             introduced: "14.2.0",
                             pairedWith: "enableIdleFrameRate",
                             name: "Idle Frame Rate",
-                            hint: "Lowers the canvas frame rate on your screen while nobody interacts and nothing moves (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
+                            hint: "Lowers the canvas frame rate on your screen while nobody interacts and nothing moves. Use World Setting follows the GM.",
+                            type: "Select",
+                            default: "world",
+                            choices: overrideSchemaChoices(),
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
@@ -206,7 +215,7 @@ export function getSettingsSchema() {
                                 { value: "30", label: "30 FPS" }
                             ],
                             scope: "client",
-                            parentKey: "clientEnableIdleFrameRate"
+                            parentKey: "clientIdleFrameRate"
                         },
                         {
                             key: "idleFrameRateDelay",
@@ -222,16 +231,18 @@ export function getSettingsSchema() {
                                 { value: "120", label: "2 minutes" }
                             ],
                             scope: "client",
-                            parentKey: "clientEnableIdleFrameRate"
+                            parentKey: "clientIdleFrameRate"
                         },
                         {
-                            key: "clientEnableVisionUpdateThrottle",
+                            key: "clientVisionUpdateThrottle",
                             introduced: "14.2.0",
                             pairedWith: "enableVisionUpdateThrottle",
                             name: "Throttled Vision Updates While Moving (Experimental)",
-                            hint: "Recomputes a moving token's vision and light a limited number of times per second on your screen (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
+                            hint: "Recomputes a moving token's vision and light a limited number of times per second on your screen. Use World Setting follows the GM.",
+                            type: "Select",
+                            default: "world",
+                            choices: overrideSchemaChoices(),
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
@@ -248,16 +259,18 @@ export function getSettingsSchema() {
                                 { value: "10", label: "10 per second" }
                             ],
                             scope: "client",
-                            parentKey: "clientEnableVisionUpdateThrottle"
+                            parentKey: "clientVisionUpdateThrottle"
                         },
                         {
-                            key: "clientEnableVideoOptimization",
+                            key: "clientVideoOptimization",
                             introduced: "14.2.0",
                             pairedWith: "enableVideoOptimization",
                             name: "Lighter Video Playback",
-                            hint: "Stops updating animated maps, tiles and tokens on your screen while they are out of view (if enabled by the GM).",
-                            type: "Boolean",
-                            default: true,
+                            hint: "Stops updating animated maps, tiles and tokens on your screen while they are out of view. Use World Setting follows the GM.",
+                            type: "Select",
+                            default: "world",
+                            choices: overrideSchemaChoices(),
+                            overridesWorld: true,
                             scope: "client"
                         },
                         {
@@ -275,7 +288,7 @@ export function getSettingsSchema() {
                                 { value: "10", label: "10 FPS" }
                             ],
                             scope: "client",
-                            parentKey: "clientEnableVideoOptimization"
+                            parentKey: "clientVideoOptimization"
                         }
                     ]
                 }

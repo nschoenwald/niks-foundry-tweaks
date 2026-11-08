@@ -4,8 +4,10 @@
  * scrolled out of view (CSS `content-visibility: auto`), so long chat logs and large directories stay responsive.
  *
  * @introduced v14.2.0
+ * @updated v14.2.2 (Personal setting can also turn it on when the GM left it off: Use World Setting / On / Off)
  */
-import { MODULE_ID, isFeatureActive, clearSettingsCache, log } from "../../context.js";
+import { MODULE_ID, clearSettingsCache, log } from "../../context.js";
+import { isFeatureOnForUser } from "../../utils/personal-override.js";
 
 const BODY_CLASS = "nft-lightweight-lists";
 
@@ -15,8 +17,8 @@ const BODY_CLASS = "nft-lightweight-lists";
  */
 export function updateLightweightLists() {
     clearSettingsCache(`${MODULE_ID}.enableLightweightLists`);
-    clearSettingsCache(`${MODULE_ID}.clientEnableLightweightLists`);
-    const active = isFeatureActive("enableLightweightLists", "clientEnableLightweightLists");
+    clearSettingsCache(`${MODULE_ID}.clientLightweightLists`);
+    const active = isFeatureOnForUser("enableLightweightLists", "clientLightweightLists");
     document.body.classList.toggle(BODY_CLASS, active);
     log(`Lightweight Chat & Sidebar Lists ${active ? "enabled" : "disabled"}`);
 }
