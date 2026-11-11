@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.3.0] - 2026-11-11
+### Added
+- **Clearer Scene Control Toggles**: On/off toggles in the left toolbar (such as Force Snap to Grid Vertices or Unconstrained Movement) are now easy to tell apart. Toggles that are off are dimmed, toggles that are on get a colored ring and a small colored dot, and hovering no longer makes an off toggle look on. Choice tools such as Select or Draw Walls work the same way: the selected one gets the colored ring, the others are dimmed. Works in light and dark themes and with Carolingian UI, following its color theme. On by default; players can turn it off for themselves.
+
 ## [14.2.2] - 2026-11-08
 ### Changed
 - **Performance features**: Players can now turn each performance feature on for themselves even if the GM left it off, not only off. Their personal setting offers **Use World Setting** (the default, follows the GM), **On** and **Off**. Anyone who had turned a feature off keeps it off.

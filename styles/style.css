@@ -60,6 +60,79 @@ body.nft-lightweight-lists .directory-list .directory-item.entry {
     contain-intrinsic-block-size: auto var(--sidebar-item-height, 48px);
 }
 
+/* ── Clearer Scene Control Toggles ──────────────────────────────────── */
+/*
+ * Toggles that are off and choice tools that aren't selected: neutral border, dimmed icon. Toggles that
+ * are on and the selected tool: same neutral background, full-strength icon, 2px accent ring; toggles also
+ * get an accent dot in the bottom-right corner (a background gradient, because Font Awesome duotone icons use ::after). Hover
+ * only brightens and never borrows the "on" look.
+ * !important on the button rules: Foundry loads module.json styles into `@layer modules`, but Carolingian UI
+ * injects its stylesheet with its own <link>, unlayered, and unlayered rules win over layered ones whatever
+ * their specificity. Important declarations in a layer beat normal unlayered ones.
+ */
+
+/* Core, dark interface (also the default when no theme is set) */
+body.nft-clear-scene-toggles #scene-controls-tools {
+    --nft-toggle-off-bg: var(--color-cool-5-75);
+    --nft-toggle-off-border: var(--color-cool-4);
+    --nft-toggle-off-hover-bg: var(--color-cool-5);
+    --nft-toggle-off-hover-border: var(--color-cool-3);
+    --nft-toggle-off-icon-mix: 50%;
+    --nft-toggle-off-hover-icon-mix: 80%;
+    --nft-toggle-on-ring: #8484ff;
+    --nft-toggle-dot: #8484ff;
+}
+
+/* Core, light interface */
+body.nft-clear-scene-toggles #interface.theme-light #scene-controls-tools {
+    --nft-toggle-off-bg: rgba(255, 255, 255, 0.6);
+    --nft-toggle-off-border: rgba(0, 0, 0, 0.2);
+    --nft-toggle-off-hover-bg: rgba(255, 255, 255, 0.85);
+    --nft-toggle-off-hover-border: rgba(0, 0, 0, 0.35);
+    --nft-toggle-off-icon-mix: 45%;
+    --nft-toggle-off-hover-icon-mix: 75%;
+    --nft-toggle-on-ring: #4545c8;
+    --nft-toggle-dot: #4545c8;
+}
+
+/* Carolingian UI left controls: follow its active color theme */
+body.nft-clear-scene-toggles.crlngn-ui #interface.crlngn-controls #scene-controls-tools {
+    --nft-toggle-off-bg: var(--color-secondary-65);
+    --nft-toggle-off-border: var(--color-secondary-bright-50);
+    --nft-toggle-off-hover-bg: var(--color-secondary-75);
+    --nft-toggle-off-hover-border: var(--color-secondary-bright);
+    --nft-toggle-on-ring: var(--color-highlights);
+    --nft-toggle-dot: var(--color-highlights);
+}
+
+/* Toggles and choice tools (Select, Draw Walls…); one-click buttons (.button) keep core's look */
+body.nft-clear-scene-toggles #interface #ui-left #scene-controls #scene-controls-tools button.ui-control.tool:not(.button) {
+    --nft-toggle-dot-image: none;
+    background: var(--nft-toggle-dot-image), var(--nft-toggle-off-bg) !important;
+    border: 1px solid var(--nft-toggle-off-border) !important;
+    box-shadow: none !important;
+    color: color-mix(in srgb, var(--control-icon-color) var(--nft-toggle-off-icon-mix), transparent) !important;
+}
+
+body.nft-clear-scene-toggles #interface #ui-left #scene-controls #scene-controls-tools button.ui-control.tool:not(.button):hover {
+    background: var(--nft-toggle-dot-image), var(--nft-toggle-off-hover-bg) !important;
+    border-color: var(--nft-toggle-off-hover-border) !important;
+    color: color-mix(in srgb, var(--control-icon-color) var(--nft-toggle-off-hover-icon-mix), transparent) !important;
+}
+
+/* Selected tool and toggles that are on: accent ring, full-strength icon */
+body.nft-clear-scene-toggles #interface #ui-left #scene-controls #scene-controls-tools button.ui-control.tool:not(.button)[aria-pressed=true] {
+    border-color: var(--nft-toggle-on-ring) !important;
+    box-shadow: inset 0 0 0 1px var(--nft-toggle-on-ring) !important;
+    color: var(--control-icon-color) !important;
+}
+
+/* Only toggles get the dot, so an on toggle never looks like the selected tool */
+body.nft-clear-scene-toggles #interface #ui-left #scene-controls #scene-controls-tools button.ui-control.tool:not(.button).toggle[aria-pressed=true] {
+    --nft-toggle-dot-image: radial-gradient(circle at calc(100% - 6px) calc(100% - 6px),
+        var(--nft-toggle-dot) 3px, transparent 3.5px);
+}
+
 /* ── Toolbar Limitation ─────────────────────────────────────────────── */
 
 #scene-controls .nft-scrollable-toolbar,

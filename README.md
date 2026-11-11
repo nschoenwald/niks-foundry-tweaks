@@ -47,6 +47,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Sidebar Multi-line Names](#sidebar-multi-line-names)** | UI & Visuals | ✅ Enabled | No |
 | **[Sync Browser Tab Title](#sync-browser-tab-title)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Toolbar Limitation](#toolbar-limitation)** | UI & Visuals | ✅ Enabled | Yes |
+| **[Clearer Scene Control Toggles](#clearer-scene-control-toggles)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Carolingian UI Theme Harmony](#carolingian-ui-theme-harmony)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clear Targets Token Control Button](#clear-targets-token-control-button)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Disable Underground Token Hiding](#disable-underground-token-hiding)** | Canvas & Tokens | ❌ Disabled | No |
@@ -103,6 +104,9 @@ Dynamically updates the browser tab title with the name of the active scene bein
 
 ### Toolbar Limitation
 Turns toolbars scrollable when button count exceeds a configured limit (default: 20), preventing overcrowded canvas controls. Layout is recalculated after the window has finished resizing.
+
+### Clearer Scene Control Toggles
+Makes on/off toggles in the left scene controls toolbar (such as **Force Snap to Grid Vertices**, **Toggle Notes Display** or **Unconstrained Movement**) easy to tell apart at a glance. Toggles that are off look like normal buttons with a dimmed icon. Toggles that are on keep the normal background but show their icon at full strength, with an accent-colored ring and a small accent dot in the corner, The same applies to choice tools such as **Select** or **Draw Walls**: the selected tool gets the ring and a full-strength icon (no dot, so it never looks like a toggle), and the other choice tools are dimmed. Hovering a button no longer makes it look switched on or selected. One-click buttons such as **Clear** keep their usual look. Works with light and dark interface themes, and with **Carolingian UI**'s left controls, where it follows the active Carolingian color theme. Players can turn it off for themselves under Personal Preferences.
 
 ### Carolingian UI Theme Harmony
 Adapts the Settings Dashboard and floating canvas banners to **Carolingian UI** color palettes, typography and top scene navigation offsets. System modules add their own parts (with Nik's DnD5e Tweaks: chat cards, template and summoning HUDs, and legendary action placeholders in the Combat Carousel).

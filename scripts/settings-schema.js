@@ -112,6 +112,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "clientEnableClearSceneToggles",
+                            introduced: "14.3.0",
+                            pairedWith: "enableClearSceneToggles",
+                            name: "Clearer Scene Control Toggles",
+                            hint: "Makes on/off toggles and the selected tool in the left scene controls toolbar easy to spot on your screen (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
                             key: "enableToolbarLimitation",
                             introduced: "14.0.0",
                             docs: "toolbar-limitation",
@@ -362,6 +372,17 @@ export function getSettingsSchema() {
                             keywords: ["long names", "sidebar"],
                             name: "Sidebar Multi-line Names",
                             hint: "Allows long document names in the right sidebar (Actors, Items, Scenes, etc.) to wrap onto multiple lines instead of being cut off.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableClearSceneToggles",
+                            introduced: "14.3.0",
+                            docs: "clearer-scene-control-toggles",
+                            keywords: ["scene controls", "toolbar", "toggle", "snap to grid", "accessibility"],
+                            name: "Clearer Scene Control Toggles",
+                            hint: "Makes on/off toggles in the left scene controls toolbar (such as Force Snap to Grid Vertices or Unconstrained Movement) easy to tell apart: off toggles and unselected tools are dimmed, on toggles get a colored ring and dot, the selected tool (Select, Draw Walls…) a colored ring, and hovering no longer changes the look. Adapts to Carolingian UI. Players can turn it off for themselves.",
                             type: "Boolean",
                             default: true,
                             scope: "world"

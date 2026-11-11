@@ -12,6 +12,7 @@
 // Interface
 import { initSceneNavName } from "./features/ui-visuals/scene-nav-name.js";
 import { enableSidebarNameWrap, disableSidebarNameWrap } from "./features/ui-visuals/sidebar-name-wrap.js";
+import { updateClearSceneToggles } from "./features/ui-visuals/clear-scene-toggles.js";
 import { initSheetPopoutButton, disableSheetPopoutButton } from "./features/ui-visuals/sheet-popout-button.js";
 import { initActorDispositionColors } from "./features/ui-visuals/actor-disposition-colors.js";
 import { initToolbarLimitation, applyToolbarLimitation, resetToolbars } from "./features/ui-visuals/toolbar-limitation.js";
@@ -148,6 +149,16 @@ Hooks.once("init", () => {
         config: false,
         type: Boolean,
         default: true
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableClearSceneToggles", {
+        name: "Clearer Scene Control Toggles (Personal)",
+        hint: "Makes on/off toggles and the selected tool in the left scene controls toolbar easy to spot on your screen (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateClearSceneToggles()
     });
 
     game.settings.register(MODULE_ID, "clientEnableAutoanimationsTeleportUI", {
@@ -457,6 +468,17 @@ Hooks.once("init", () => {
         }
     });
 
+    game.settings.register(MODULE_ID, "enableClearSceneToggles", {
+        name: "Clearer Scene Control Toggles",
+        hint: "Makes on/off toggles in the left scene controls toolbar easy to tell apart: off toggles and unselected tools are dimmed, on toggles get a colored ring and dot, the selected tool a colored ring. Adapts to Carolingian UI.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+        restricted: true,
+        onChange: () => updateClearSceneToggles()
+    });
+
     game.settings.register(MODULE_ID, "enableCleanSheetTitles", {
         name: "Clean Sheet Window Titles",
         hint: "Removes the verbose type prefix (e.g. \"Non Player Character:\") from document sheet window titles, showing just the document name. Especially useful when detaching windows in V14, where the prefix otherwise consumes all visible space in the taskbar. Requires a reload to take effect.",
@@ -702,6 +724,7 @@ Hooks.once("ready", async () => {
 
     if (game.settings.get(MODULE_ID, "enableSidebarNameWrap")) enableSidebarNameWrap();
     updateReadableTextSize();
+    updateClearSceneToggles();
 
     // One socket listener for the whole module, routing by action
     game.socket.on(`module.${MODULE_ID}`, (data) => {
