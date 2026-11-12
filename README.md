@@ -88,7 +88,7 @@ Color-codes right-click context menu options across sheets, compendiums, directo
 System modules can add their own menu labels, so system-specific entries are colored too.
 
 ### Reliable Chat Log Auto-Scroll
-Keeps the chat log scrolled to the bottom when new cards appear, trays expand or images load after the fact, while preserving your scroll position when you are reading older messages.
+Keeps the chat log scrolled to the bottom when new cards appear, trays expand, dice are revealed or images load after the fact. Only your own scrolling (mouse wheel, keys, touch or dragging the scrollbar) stops it, so you can read older messages undisturbed; scrolling back to the bottom resumes it. It also catches up when you switch back to the chat tab or expand the sidebar.
 
 ### Hide Private GM Rolls from Players
 Whispered, private and blind rolls made by the GM no longer show up for players as empty placeholder cards in the chat log. System modules can mark their own roll cards, so system rolls are hidden too.

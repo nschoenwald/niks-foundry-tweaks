@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.3.2] - 2026-11-13
+### Fixed
+- **Reliable Chat Log Auto-Scroll**: The chat log no longer stops following new messages in busy moments. When a card grew right as it was posted (trays opening, dice revealed after the 3D roll, cards updated by automation modules), the chat could think you had scrolled up and stay put until you scrolled down by hand. Now only your own scrolling stops it, and scrolling back to the bottom resumes it. It also catches up when you expand the collapsed sidebar.
+
 ## [14.3.1] - 2026-11-12
 ### Changed
 - **Clearer Scene Control Toggles**: Toggles that are off and tools that aren't selected are dimmed less, so their icons stay easier to recognize while on toggles and the selected tool still stand out.
