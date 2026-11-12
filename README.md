@@ -195,7 +195,7 @@ Enables diagnostic logging in the browser console, for this module and every Nik
 Patches are zero-configuration, always-on fixes for confirmed upstream Foundry bugs:
 * **Token Resource Bar Refresh**: Fixes an upstream Foundry VTT V14 core issue where the first HP change of an unlinked token in a session (e.g. via the Token HUD) did not visually update its resource bar. Only applies to Foundry 14.369 and lower (fixed upstream in 14.370).
 * **Placeables Sidebar Recovery**: Fixes an upstream Foundry VTT V14 core issue where one failed render of the Placeables sidebar's token list (for example caused by another module) pushed the sidebar to the left and broke it until reload, with the console error `Cannot read properties of null (reading 'replaceWith')`. The sidebar now recovers on its next update.
-* **macOS Canvas Performance**: Fixes an upstream Foundry VTT V14 / PIXI issue ([#14967](https://github.com/foundryvtt/foundryvtt/issues/14967)) where canvas FPS on Macs dropped steeply as tokens were added to a scene (around 20 FPS at 80 tokens). Only applies on macOS; Windows and Linux are unaffected by the bug and left alone.
+* **macOS Canvas Performance**: Fixes an upstream Foundry VTT V14 / PIXI issue ([#14967](https://github.com/foundryvtt/foundryvtt/issues/14967)) where canvas FPS on Macs dropped steeply as tokens were added to a scene (around 20 FPS at 80 tokens). Only applies on macOS and to Foundry 14.370 and lower (fixed upstream in 14.371); Windows and Linux are unaffected by the bug and left alone.
 
 ---
 

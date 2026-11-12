@@ -3,6 +3,7 @@
  * Description: Fixes an upstream Foundry V14 / PIXI issue where canvas FPS on Macs collapses as more tokens are placed on a scene.
  *
  * @introduced v14.1.2
+ * @updated vNEXT (skipped on Foundry 14.371 and later, fixed upstream)
  */
 import { log } from "../../context.js";
 
@@ -28,9 +29,16 @@ import { log } from "../../context.js";
  * uploads per frame are unchanged; only buffer reuse differs. Windows and Linux
  * (Direct3D, Vulkan, desktop GL rename buffers transparently) are left alone.
  *
- * Not fixed upstream as of Foundry 14.370. Add a FIXED_IN_VERSION gate once it is.
+ * Fixed upstream in Foundry V14.371, so the patch only applies to 14.370 and lower.
  */
+const FIXED_IN_VERSION = "14.371";
+
 export function initFixMacBatchBuffer() {
+    if (!foundry.utils.isNewerVersion(FIXED_IN_VERSION, game.version)) {
+        log(`Skipped macOS batch buffer patch (fixed in Foundry ${FIXED_IN_VERSION}, running ${game.version})`);
+        return;
+    }
+
     const BatchRenderer = globalThis.PIXI?.BatchRenderer;
     if (!BatchRenderer || !isMacOS()) return;
     if (BatchRenderer.canUploadSameBuffer === false) return;
