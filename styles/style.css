@@ -77,8 +77,8 @@ body.nft-clear-scene-toggles #scene-controls-tools {
     --nft-toggle-off-border: var(--color-cool-4);
     --nft-toggle-off-hover-bg: var(--color-cool-5);
     --nft-toggle-off-hover-border: var(--color-cool-3);
-    --nft-toggle-off-icon-mix: 50%;
-    --nft-toggle-off-hover-icon-mix: 80%;
+    --nft-toggle-off-icon-mix: 70%;
+    --nft-toggle-off-hover-icon-mix: 90%;
     --nft-toggle-on-ring: #8484ff;
     --nft-toggle-dot: #8484ff;
 }
@@ -89,8 +89,8 @@ body.nft-clear-scene-toggles #interface.theme-light #scene-controls-tools {
     --nft-toggle-off-border: rgba(0, 0, 0, 0.2);
     --nft-toggle-off-hover-bg: rgba(255, 255, 255, 0.85);
     --nft-toggle-off-hover-border: rgba(0, 0, 0, 0.35);
-    --nft-toggle-off-icon-mix: 45%;
-    --nft-toggle-off-hover-icon-mix: 75%;
+    --nft-toggle-off-icon-mix: 65%;
+    --nft-toggle-off-hover-icon-mix: 90%;
     --nft-toggle-on-ring: #4545c8;
     --nft-toggle-dot: #4545c8;
 }

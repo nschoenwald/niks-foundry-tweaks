@@ -7,6 +7,7 @@
  * full icon without the dot, the others the dimmed icon. One-click `.button` tools are left alone. CSS only (`styles/style.css`, `body.nft-clear-scene-toggles`).
  *
  * @introduced v14.3.0
+ * @updated v14.3.1 (softer dimming of off toggles and unselected tools)
  */
 import { log, isFeatureActive } from "../../context.js";
 

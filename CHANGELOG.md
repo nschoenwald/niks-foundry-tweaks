@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.3.1] - 2026-11-12
+### Changed
+- **Clearer Scene Control Toggles**: Toggles that are off and tools that aren't selected are dimmed less, so their icons stay easier to recognize while on toggles and the selected tool still stand out.
+
 ## [14.3.0] - 2026-11-11
 ### Added
 - **Clearer Scene Control Toggles**: On/off toggles in the left toolbar (such as Force Snap to Grid Vertices or Unconstrained Movement) are now easy to tell apart. Toggles that are off are dimmed, toggles that are on get a colored ring and a small colored dot, and hovering no longer makes an off toggle look on. Choice tools such as Select or Draw Walls work the same way: the selected one gets the colored ring, the others are dimmed. Works in light and dark themes and with Carolingian UI, following its color theme. On by default; players can turn it off for themselves.
