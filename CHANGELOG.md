@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.5.0] - 2026-11-15
+### Removed
+- **Performance features**: Lightweight Chat & Sidebar Lists, Batched Sidebar Updates, Idle Frame Rate, Throttled Vision Updates While Moving and Lighter Video Playback are gone, together with the Performance tab of the Settings Dashboard and their Personal Preferences. Testing showed they made no noticeable difference. The macOS Canvas Performance fix is not affected.
+
 ## [14.4.0] - 2026-11-13
 ### Added
 - **Copy & Move to Folder**: Right-clicking a scene, actor, item, journal, roll table, card stack, playlist or macro in the sidebar now offers **Copy to Folder…** and **Move to Folder…**. Pick the folder from a list that matches the sidebar's folder tree, instead of dragging through long folder lists. A copy keeps its name when it goes into another folder. Also works for entries in unlocked compendiums (GM only). Players can use it on documents they own. On by default; players can turn it off for themselves.
