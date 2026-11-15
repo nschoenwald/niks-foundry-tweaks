@@ -36,6 +36,7 @@ import { initVideoOptimization, updateVideoOptimization } from "./features/canva
 
 // Utilities and patches
 import { initAutoUnpauseOnLogin } from "./features/utilities/auto-unpause-on-login.js";
+import { initFolderCopyMove } from "./features/ui-visuals/folder-copy-move.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
 import { initFixMacBatchBuffer } from "./features/patches/fix-mac-batch-buffer.js";
@@ -159,6 +160,15 @@ Hooks.once("init", () => {
         type: Boolean,
         default: true,
         onChange: () => updateClearSceneToggles()
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableFolderCopyMove", {
+        name: "Copy & Move to Folder (Personal)",
+        hint: "Shows Copy to Folder and Move to Folder in the right-click menu of sidebar documents (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true
     });
 
     game.settings.register(MODULE_ID, "clientEnableAutoanimationsTeleportUI", {
@@ -479,6 +489,16 @@ Hooks.once("init", () => {
         onChange: () => updateClearSceneToggles()
     });
 
+    game.settings.register(MODULE_ID, "enableFolderCopyMove", {
+        name: "Copy & Move to Folder",
+        hint: "Adds Copy to Folder and Move to Folder to the right-click menu of documents in the sidebar directories and unlocked compendiums.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+        restricted: true
+    });
+
     game.settings.register(MODULE_ID, "enableCleanSheetTitles", {
         name: "Clean Sheet Window Titles",
         hint: "Removes the verbose type prefix (e.g. \"Non Player Character:\") from document sheet window titles, showing just the document name. Especially useful when detaching windows in V14, where the prefix otherwise consumes all visible space in the taskbar. Requires a reload to take effect.",
@@ -706,6 +726,7 @@ Hooks.once("setup", () => {
 
     // Utilities and fixes
     initAutoUnpauseOnLogin();
+    initFolderCopyMove();
     initFixTokenBarRefresh();
     initFixPlaceablesSidebarTab();
     initFixMacBatchBuffer();

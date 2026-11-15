@@ -1521,6 +1521,13 @@ button.nft-feature-name:hover {
     color: #f1f5f9;
 }
 
+.nft-list-editor-choice {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 60%;
+    padding: 3px 6px;
+}
+
 .nft-list-editor-remove {
     flex: 0 0 auto;
     display: flex;

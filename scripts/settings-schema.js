@@ -122,6 +122,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "clientEnableFolderCopyMove",
+                            introduced: "14.4.0",
+                            pairedWith: "enableFolderCopyMove",
+                            name: "Copy & Move to Folder",
+                            hint: "Shows Copy to Folder and Move to Folder in the right-click menu of sidebar documents on your screen (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
                             key: "enableToolbarLimitation",
                             introduced: "14.0.0",
                             docs: "toolbar-limitation",
@@ -372,6 +382,17 @@ export function getSettingsSchema() {
                             keywords: ["long names", "sidebar"],
                             name: "Sidebar Multi-line Names",
                             hint: "Allows long document names in the right sidebar (Actors, Items, Scenes, etc.) to wrap onto multiple lines instead of being cut off.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableFolderCopyMove",
+                            introduced: "14.4.0",
+                            docs: "copy--move-to-folder",
+                            keywords: ["folder", "sidebar", "right-click", "duplicate", "compendium"],
+                            name: "Copy & Move to Folder",
+                            hint: "Adds Copy to Folder and Move to Folder to the right-click menu of scenes, actors, items, journals, roll tables, cards, playlists and macros in the sidebar, and of entries in unlocked compendiums. Both open a list of the directory's folders. A copy keeps its name in another folder and is called \"Copy of …\" in the same folder. Players can use it on documents they own, and can turn it off for themselves.",
                             type: "Boolean",
                             default: true,
                             scope: "world"

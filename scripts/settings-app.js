@@ -1012,6 +1012,8 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             hint: setting.hint,
             value: input.value,
             defaultValue: setting.default,
+            choices: setting.listChoices,
+            choiceDefault: setting.listChoiceDefault,
             onApply: (value) => {
                 input.value = value;
                 const count = parseListValue(value).length;

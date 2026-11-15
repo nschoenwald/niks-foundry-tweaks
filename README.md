@@ -45,6 +45,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Hide Private GM Rolls from Players](#hide-private-gm-rolls-from-players)** | UI & Visuals | ✅ Enabled | No |
 | **[Actor Directory Disposition Dots](#actor-directory-disposition-dots)** | UI & Visuals | ✅ Enabled | No |
 | **[Sidebar Multi-line Names](#sidebar-multi-line-names)** | UI & Visuals | ✅ Enabled | No |
+| **[Copy & Move to Folder](#copy--move-to-folder)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Sync Browser Tab Title](#sync-browser-tab-title)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Toolbar Limitation](#toolbar-limitation)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clearer Scene Control Toggles](#clearer-scene-control-toggles)** | UI & Visuals | ✅ Enabled | Yes |
@@ -98,6 +99,15 @@ Displays colored disposition dots (Friendly, Neutral, Hostile, Secret) next to a
 
 ### Sidebar Multi-line Names
 Long names of actors, items, scenes and other documents in the right sidebar wrap onto several lines instead of being cut off.
+
+### Copy & Move to Folder
+Adds **Copy to Folder…** and **Move to Folder…** to the right-click menu of documents in the sidebar: scenes, actors, items, journals, roll tables, card stacks, playlists and macros, and the entries of unlocked compendiums. Both open a short dialog with the directory's folders in the same order and nesting as the sidebar, plus **(No Folder)** for the top level. No more dragging through long, collapsed folder lists.
+
+- **Move** puts the document into the chosen folder. Its current folder is marked and can't be picked.
+- **Copy** creates a copy in the chosen folder, like Duplicate. In another folder the copy keeps its name; in the same folder it is called "Copy of …".
+- Players see the entries for documents they own (Copy also needs permission to create that kind of document). In compendiums, only the GM sees them, and only while the compendium is unlocked. The entries only appear when the directory has folders.
+
+The GM can turn the feature off; players can turn it off for themselves.
 
 ### Sync Browser Tab Title
 Dynamically updates the browser tab title with the name of the active scene being viewed.
@@ -219,6 +229,7 @@ All features of this module, and of system modules such as Nik's DnD5e Tweaks, a
 **Changing settings**
 * **Changed from default**: A dot after the name marks a setting that differs from its default; the ↺ button next to it puts it back.
 * **Unsaved changes**: Edited settings get a colored bar, and *Save Changes* shows how many are pending. Closing the dashboard with unsaved changes asks first.
+* **List settings**: Settings that hold a list of names (e.g. Auto-Apply Effects) open in their own editor, where you search, add and remove entries one by one. Some lists also offer a dropdown next to each entry (e.g. when Nik's DnD5e Tweaks removes an exception's template).
 * **World Settings (GMs & Authorized Users)**: Fully supports Foundry's **"Modify Configuration Settings" (`SETTINGS_MODIFY`)** permission, so Assistant GMs or trusted players with that permission can change world settings like a GM.
 * **Personal Preferences (All Players & GMs)**: Settings stored in your own browser. Players turn features on or off for their own screen without changing anything for others. For GMs this tab is at the bottom.
 * **Players**: Players without settings permission see their Personal Preferences first and an **Active in This World** tab that lists the features the GM turned on, each linked to their own choice. "Reset Defaults" resets only their personal settings.

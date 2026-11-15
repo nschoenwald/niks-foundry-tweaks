@@ -3,5 +3,19 @@
   "NFT.AttachButton.Tooltip": "Attach back to main window",
 
   "NFT.ClearTargets.ButtonTitleGM": "Clear All Targets (All Players)",
-  "NFT.ClearTargets.ButtonTitlePlayer": "Clear My Targets"
+  "NFT.ClearTargets.ButtonTitlePlayer": "Clear My Targets",
+
+  "NFT.FolderCopyMove.Copy": "Copy to Folder…",
+  "NFT.FolderCopyMove.Move": "Move to Folder…",
+  "NFT.FolderCopyMove.CopyTitle": "Copy {name} to Folder",
+  "NFT.FolderCopyMove.MoveTitle": "Move {name} to Folder",
+  "NFT.FolderCopyMove.CopyHint": "Choose the folder for the copy of {name}.",
+  "NFT.FolderCopyMove.MoveHint": "Choose the folder to move {name} into.",
+  "NFT.FolderCopyMove.Folder": "Folder",
+  "NFT.FolderCopyMove.NoFolder": "(No Folder)",
+  "NFT.FolderCopyMove.CurrentSuffix": "(current)",
+  "NFT.FolderCopyMove.CopyButton": "Copy",
+  "NFT.FolderCopyMove.MoveButton": "Move",
+  "NFT.FolderCopyMove.Copied": "Copied {name} to {folder}.",
+  "NFT.FolderCopyMove.Moved": "Moved {name} to {folder}."
 }

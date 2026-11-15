@@ -3,5 +3,19 @@
   "NFT.AttachButton.Tooltip": "Wieder ans Hauptfenster anheften",
 
   "NFT.ClearTargets.ButtonTitleGM": "Alle Ziele aufheben (alle Spieler)",
-  "NFT.ClearTargets.ButtonTitlePlayer": "Meine Ziele aufheben"
+  "NFT.ClearTargets.ButtonTitlePlayer": "Meine Ziele aufheben",
+
+  "NFT.FolderCopyMove.Copy": "In Ordner kopieren…",
+  "NFT.FolderCopyMove.Move": "In Ordner verschieben…",
+  "NFT.FolderCopyMove.CopyTitle": "{name} in Ordner kopieren",
+  "NFT.FolderCopyMove.MoveTitle": "{name} in Ordner verschieben",
+  "NFT.FolderCopyMove.CopyHint": "Wähle den Ordner für die Kopie von {name}.",
+  "NFT.FolderCopyMove.MoveHint": "Wähle den Ordner, in den {name} verschoben wird.",
+  "NFT.FolderCopyMove.Folder": "Ordner",
+  "NFT.FolderCopyMove.NoFolder": "(Kein Ordner)",
+  "NFT.FolderCopyMove.CurrentSuffix": "(aktuell)",
+  "NFT.FolderCopyMove.CopyButton": "Kopieren",
+  "NFT.FolderCopyMove.MoveButton": "Verschieben",
+  "NFT.FolderCopyMove.Copied": "{name} nach {folder} kopiert.",
+  "NFT.FolderCopyMove.Moved": "{name} nach {folder} verschoben."
 }

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.4.0] - 2026-11-13
+### Added
+- **Copy & Move to Folder**: Right-clicking a scene, actor, item, journal, roll table, card stack, playlist or macro in the sidebar now offers **Copy to Folder…** and **Move to Folder…**. Pick the folder from a list that matches the sidebar's folder tree, instead of dragging through long folder lists. A copy keeps its name when it goes into another folder. Also works for entries in unlocked compendiums (GM only). Players can use it on documents they own. On by default; players can turn it off for themselves.
+- **Settings Dashboard**: List settings can offer a dropdown next to each entry in the list editor. Nik's DnD5e Tweaks uses it to choose when an exception's template is removed.
+
 ## [14.3.2] - 2026-11-13
 ### Fixed
 - **Reliable Chat Log Auto-Scroll**: The chat log no longer stops following new messages in busy moments. When a card grew right as it was posted (trays opening, dice revealed after the 3D roll, cards updated by automation modules), the chat could think you had scrolled up and stay put until you scrolled down by hand. Now only your own scrolling stops it, and scrolling back to the bottom resumes it. It also catches up when you expand the collapsed sidebar.
