@@ -121,6 +121,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "clientEnableDelayedDisconnectWarning",
+                            introduced: "14.6.0",
+                            pairedWith: "enableDelayedDisconnectWarning",
+                            name: "Delayed Disconnect Warning",
+                            hint: "Only shows the lost connection warning on your screen when the connection stays lost for a few seconds (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
                             key: "clientEnableFolderCopyMove",
                             introduced: "14.4.0",
                             pairedWith: "enableFolderCopyMove",
@@ -275,6 +285,16 @@ export function getSettingsSchema() {
                             type: "Boolean",
                             default: true,
                             scope: "world"
+                        },
+                        {
+                            key: "disconnectWarningDelay",
+                            introduced: "14.6.0",
+                            name: "Disconnect Warning Delay (Seconds)",
+                            hint: "How many seconds the connection has to stay lost before the warning is shown (0 to 60, default 5). 0 shows it right away, as in core. Foundry still reloads the page when a reconnect takes 5 seconds or longer, whatever this is set to.",
+                            type: "Number",
+                            default: 5,
+                            scope: "world",
+                            parentKey: "enableDelayedDisconnectWarning"
                         },
                         {
                             key: "enableContextMenuStyling",
@@ -486,6 +506,17 @@ export function getSettingsSchema() {
                                 { value: "never", label: "Never" }
                             ],
                             scope: "user"
+                        },
+                        {
+                            key: "enableDelayedDisconnectWarning",
+                            introduced: "14.6.0",
+                            docs: "delayed-disconnect-warning",
+                            keywords: ["connection", "disconnect", "reconnect", "lost connection", "notification", "error"],
+                            name: "Delayed Disconnect Warning",
+                            hint: "Only shows the \"You have lost connection to the server\" warning when the connection stays lost for a few seconds (set below). Short drops that reconnect right away show neither the warning nor the \"connection re-established\" message. Players can turn it off for themselves.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
                         }
                     ]
                 },

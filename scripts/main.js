@@ -32,6 +32,7 @@ import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-
 // Utilities and patches
 import { initAutoUnpauseOnLogin } from "./features/utilities/auto-unpause-on-login.js";
 import { initFolderCopyMove } from "./features/ui-visuals/folder-copy-move.js";
+import { initDelayedDisconnectWarning } from "./features/utilities/delayed-disconnect-warning.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
 import { initFixMacBatchBuffer } from "./features/patches/fix-mac-batch-buffer.js";
@@ -159,6 +160,15 @@ Hooks.once("init", () => {
     game.settings.register(MODULE_ID, "clientEnableFolderCopyMove", {
         name: "Copy & Move to Folder (Personal)",
         hint: "Shows Copy to Folder and Move to Folder in the right-click menu of sidebar documents (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableDelayedDisconnectWarning", {
+        name: "Delayed Disconnect Warning (Personal)",
+        hint: "Only shows the lost connection warning when the connection stays lost for a few seconds (if enabled by the GM).",
         scope: "client",
         config: false,
         type: Boolean,
@@ -500,6 +510,26 @@ Hooks.once("init", () => {
         }
     });
 
+    game.settings.register(MODULE_ID, "enableDelayedDisconnectWarning", {
+        name: "Delayed Disconnect Warning",
+        hint: "Only shows the lost connection warning when the connection stays lost for a few seconds (5 by default). Short drops that reconnect right away show no messages.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+        restricted: true
+    });
+
+    game.settings.register(MODULE_ID, "disconnectWarningDelay", {
+        name: "↳ Disconnect Warning Delay (Seconds)",
+        hint: "How many seconds the connection has to stay lost before the warning is shown (0 to 60).",
+        scope: "world",
+        config: false,
+        type: Number,
+        default: 5,
+        restricted: true
+    });
+
     game.settings.register(MODULE_ID, "debugMode", {
         name: "Debug Mode",
         hint: "Enables verbose debug logging in the browser console for all module features. Useful for troubleshooting issues.",
@@ -560,6 +590,7 @@ Hooks.once("setup", () => {
 
     // Utilities and fixes
     initAutoUnpauseOnLogin();
+    initDelayedDisconnectWarning();
     initFolderCopyMove();
     initFixTokenBarRefresh();
     initFixPlaceablesSidebarTab();

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.6.0] - 2026-11-16
+### Added
+- **Delayed Disconnect Warning**: The "You have lost connection to the server" warning now only appears when the connection stays lost for a few seconds (5 by default, adjustable from 0 to 60 with **Disconnect Warning Delay (Seconds)**). Short drops that reconnect right away no longer show the warning and the "connection re-established" message. On by default; players can turn it off for themselves.
+
 ## [14.5.0] - 2026-11-15
 ### Removed
 - **Performance features**: Lightweight Chat & Sidebar Lists, Batched Sidebar Updates, Idle Frame Rate, Throttled Vision Updates While Moving and Lighter Video Playback are gone, together with the Performance tab of the Settings Dashboard and their Personal Preferences. Testing showed they made no noticeable difference. The macOS Canvas Performance fix is not affected.

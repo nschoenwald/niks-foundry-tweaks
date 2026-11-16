@@ -54,6 +54,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
+| **[Delayed Disconnect Warning](#delayed-disconnect-warning)** | Utilities | ✅ Enabled | Yes |
 | **[Debug Mode](#debug-mode)** | Utilities | ❌ Disabled | No |
 
 ---
@@ -144,6 +145,9 @@ Tokens created or dragged onto the scene while a combat is running are added to 
 
 ### Auto-Unpause When Logging In
 Per-user GM setting to automatically unpause the world upon login (**Always**, **When no players connected**, or **Never**).
+
+### Delayed Disconnect Warning
+Foundry shows "You have lost connection to the server" the moment the connection drops, followed by "Server connection re-established" a second later on a short hiccup. With this feature the warning only appears when the connection stays lost for a few seconds: 5 by default, adjustable from 0 to 60 with **Disconnect Warning Delay (Seconds)**. Drops that reconnect sooner show neither message. Longer outages behave as in core (warning, then the page reloads once the connection is back). Foundry reloads the page whenever a reconnect takes 5 seconds or longer, so with a longer delay such a reload can happen without any warning. Players can turn it off for themselves.
 
 ### Debug Mode
 Enables diagnostic logging in the browser console, for this module and every Nik's Tweaks module that uses the dashboard.
