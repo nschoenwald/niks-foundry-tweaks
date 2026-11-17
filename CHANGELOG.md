@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.8.0] - 2026-11-17
+### Added
+- **Enhanced Teleport Targeting UI**: Now also works with Boss Loot FX (BLFX). When a BLFX teleport (e.g. *Misty Step*, *Dimension Door*, *Void Blink*) asks for a destination, you get the same banner with a live distance readout and the ghost token preview instead of BLFX's crosshair. Press <kbd>ESC</kbd> or Cancel to stop; right-click pans the canvas as usual. BLFX sets no maximum range, so the banner shows the distance only.
+
 ## [14.7.0] - 2026-11-17
 ### Added
 - **Settings Dashboard**: List settings can now offer a picker with the available options instead of a text list, e.g. the languages for Nik's DnD5e Tweaks' *World Language Filter*.

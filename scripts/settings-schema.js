@@ -173,7 +173,7 @@ export function getSettingsSchema() {
                             introduced: "14.0.0",
                             pairedWith: "enableAutoanimationsTeleportUI",
                             name: "Enhanced Teleport Targeting UI",
-                            hint: "Shows a floating HUD banner, ghost token preview, and allows pressing ESC to cancel when picking an Automated Animations teleport destination (if enabled by the GM).",
+                            hint: "Shows a floating HUD banner, ghost token preview, and allows pressing ESC to cancel when picking an Automated Animations or BLFX teleport destination (if enabled by the GM).",
                             type: "Boolean",
                             default: true,
                             scope: "client"
@@ -440,10 +440,10 @@ export function getSettingsSchema() {
                         {
                             key: "enableAutoanimationsTeleportUI",
                             introduced: "14.0.0",
-                            docs: "enhanced-teleport-targeting-ui-automated-animations",
-                            keywords: ["Misty Step", "Dimension Door", "teleport", "Automated Animations"],
-                            name: "Enhanced Teleport Targeting UI (Autoanimations)",
-                            hint: "When using an Automated Animations teleport preset (e.g. Misty Step, Dimension Door), adds a floating screen banner with live range/distance readout, a ghost token preview under the cursor showing valid/invalid placement, and allows pressing ESC to cancel.",
+                            docs: "enhanced-teleport-targeting-ui-automated-animations-blfx",
+                            keywords: ["Misty Step", "Dimension Door", "teleport", "Automated Animations", "BLFX", "Boss Loot"],
+                            name: "Enhanced Teleport Targeting UI (Autoanimations, BLFX)",
+                            hint: "When picking a teleport destination with an Automated Animations teleport preset or a Boss Loot FX (BLFX) teleport (e.g. Misty Step, Dimension Door), adds a floating screen banner with live range/distance readout, a ghost token preview under the cursor showing valid/invalid placement, and allows pressing ESC to cancel.",
                             type: "Boolean",
                             default: true,
                             scope: "world"

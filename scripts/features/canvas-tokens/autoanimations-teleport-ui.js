@@ -1,12 +1,14 @@
 /**
  * Feature: Enhanced Teleport Targeting UI
- * Description: Injects a floating destination HUD banner, ghost token preview with distance/wall collision detection, and ESC cancellation for Automated Animations teleport presets.
+ * Description: Injects a floating destination HUD banner, ghost token preview with distance/wall collision detection, and ESC cancellation for Automated Animations teleport presets and Boss Loot FX (BLFX) teleport destination picking.
  *
  * @introduced v14.0.0 (moved from Nik's DnD5e Tweaks, added there in v14.32.0)
  * @updated v14.6.1 (Range border shape follows the scene's grid: a square on square grids with 5/5/5 diagonals, a circle otherwise)
+ * @updated v14.8.0 (BLFX: replaces BLFX's destination crosshair with the same HUD, ghost preview and ESC cancellation)
  */
 import { debug, isFeatureActive } from "../../context.js";
 import { attachHudPositioning } from "../../utils/hud-position-helper.js";
+import { patchMethod } from "../../utils/patch-helper.js";
 
 /**
  * Enhanced UI for Automated Animations Teleport Preset:
@@ -23,6 +25,12 @@ import { attachHudPositioning } from "../../utils/hud-position-helper.js";
  * - Clean ESC / Cancel button cancellation that aborts targeting, detaches A-A's listener, and terminates the Sequencer effect
  * - Keeps camera position untouched
  * - Does not cancel on right-click (so right-click canvas panning remains functional)
+ *
+ * Boss Loot FX (BLFX, module "boss-loot-assets-premium"): its teleport macros (Misty Step, Dimension Door, Void Blink, …)
+ * pick the destination with `blfx.helpers.customCrosshair({ sourceToken, customImg, customImgScale, customCrosshairSquares })`,
+ * which resolves `{ x, y, rotation, distance, center }` or `null` when cancelled. The wrapper below runs our session
+ * instead and resolves the same shape. BLFX has no range or wall check, so the HUD shows the distance only.
+ * Calls with `customCrosshairSquares` place an object of a fixed size (Portal Daggers), not the caster: left to BLFX.
  */
 
 let activeSession = null;
@@ -38,21 +46,24 @@ let pendingMoveRAF = null;
  * Initializes the Autoanimations Teleport UI feature.
  */
 export function initAutoanimationsTeleportUI() {
-    // Only register hooks if Autoanimations is installed and active
-    if (!game.modules.get("autoanimations")?.active) {
-        debug("Autoanimations module not active, skipping Teleport UI enhancement.");
+    const hasAA = !!game.modules.get("autoanimations")?.active;
+    const hasBLFX = initBLFXCrosshair();
+    if (!hasAA && !hasBLFX) {
+        debug("Neither Automated Animations nor BLFX active, skipping Teleport UI enhancement.");
         return;
     }
 
-    Hooks.on("aa.preDataSanitize", onAAPreDataSanitize);
-    Hooks.on("aa.preAnimationStart", onAAPreAnimationStart);
+    if (hasAA) {
+        Hooks.on("aa.preDataSanitize", onAAPreDataSanitize);
+        Hooks.on("aa.preAnimationStart", onAAPreAnimationStart);
 
-    // Safeguard: if Sequencer ends the teleportation effect externally, clean up UI
-    Hooks.on("endedSequencerEffect", (effect) => {
-        if (effect?.data?.name === "teleportation" && activeSession) {
-            cleanupSession(false);
-        }
-    });
+        // Safeguard: if Sequencer ends the teleportation effect externally, clean up UI
+        Hooks.on("endedSequencerEffect", (effect) => {
+            if (effect?.data?.name === "teleportation" && activeSession?.mode === "aa") {
+                cleanupSession(false);
+            }
+        });
+    }
 
     // Safeguard: clean up if the canvas tears down (e.g. scene change) or caster token is deleted
     Hooks.on("canvasTearDown", () => {
@@ -65,7 +76,64 @@ export function initAutoanimationsTeleportUI() {
         }
     });
 
-    debug("Initialized Autoanimations Teleport UI enhancement.");
+    debug(`Initialized Teleport UI enhancement (Automated Animations: ${hasAA}, BLFX: ${hasBLFX}).`);
+}
+
+/**
+ * Wraps BLFX's destination crosshair so its teleports use our session.
+ * BLFX's macros call `helpers.customCrosshair` on the same object it exposes as `globalThis.blfx.helpers`,
+ * so wrapping the global property reaches every internal call.
+ * @returns {boolean} Whether the wrapper was registered.
+ */
+function initBLFXCrosshair() {
+    if (typeof globalThis.blfx?.helpers?.customCrosshair !== "function") {
+        debug("BLFX crosshair helper not found, skipping BLFX Teleport UI support.");
+        return false;
+    }
+    return patchMethod("blfx.helpers.customCrosshair", onBLFXCustomCrosshair, "MIXED");
+}
+
+/**
+ * Replacement for BLFX's `customCrosshair`: runs our destination session and resolves BLFX's result shape.
+ * Falls back to BLFX's own crosshair when the feature is off, for fixed-size object placements, or when the
+ * session can't start.
+ * @param {Function} wrapped - BLFX's original helper.
+ * @param {object} [config] - BLFX's options ({ sourceToken, customImg, customImgScale, customCrosshairSquares }).
+ * @returns {Promise<{x: number, y: number, rotation: number, distance: number, center: {x: number, y: number}}|null>}
+ */
+async function onBLFXCustomCrosshair(wrapped, config, ...rest) {
+    const { sourceToken, customImg, customImgScale = 1, customCrosshairSquares } = config ?? {};
+    const TokenClass = foundry.canvas.placeables.Token;
+    const canHandle = isFeatureActive("enableAutoanimationsTeleportUI", "clientEnableAutoanimationsTeleportUI")
+        && (sourceToken instanceof TokenClass)
+        && (customCrosshairSquares === undefined)
+        && (sourceToken.scene?.id === canvas.scene?.id)
+        && (sourceToken.isOwner || game.user.isGM);
+    if (!canHandle) return wrapped(config, ...rest);
+
+    let resolveSession;
+    const result = new Promise((resolve) => { resolveSession = resolve; });
+    const started = startTeleportSession({
+        mode: "blfx",
+        sourceToken,
+        itemName: "Teleport", // BLFX doesn't pass the item to its crosshair
+        range: null,
+        checkCollision: false,
+        customImg,
+        customImgScale,
+        resolve: resolveSession
+    });
+    if (!started) return wrapped(config, ...rest);
+    debug(`Started BLFX teleport destination session for "${sourceToken.name}".`);
+
+    // Like BLFX: get the actor sheet out of the way while picking, and bring it back afterwards
+    const sheet = sourceToken.actor?.sheet;
+    const restoreSheet = !!(sheet?.rendered && !sheet.minimized);
+    if (restoreSheet) await sheet.minimize?.();
+
+    const placement = await result;
+    if (restoreSheet) await sheet.maximize?.();
+    return placement;
 }
 
 /**
@@ -94,6 +162,7 @@ function onAAPreDataSanitize(handler, data) {
     debug(`Detected Autoanimations Teleportation preset for "${itemName}" (range: ${range}, collision: ${checkCollision}, measure: ${measureType})`);
 
     startTeleportSession({
+        mode: "aa",
         sourceToken,
         item: handler.item,
         itemName,
@@ -109,7 +178,7 @@ function onAAPreDataSanitize(handler, data) {
  * Used as a fallback or to update range/collision from sanitized data if needed.
  */
 function onAAPreAnimationStart(sanitizedData) {
-    if (!activeSession) return;
+    if (activeSession?.mode !== "aa") return;
     if (sanitizedData?.primary?.options) {
         const opts = sanitizedData.primary.options;
         opts.measureType = getGridMeasureType();
@@ -178,8 +247,15 @@ function restoreStageInterception() {
 
 /**
  * Starts an enhanced teleport destination picking session.
+ * @param {object} options
+ * @param {"aa"|"blfx"} options.mode - Automated Animations (A-A moves the token on its own click listener) or
+ *   BLFX (we resolve the destination through `resolve`).
+ * @param {number|null} options.range - Maximum distance, or null for no limit (distance shown only).
+ * @param {string} [options.customImg] - BLFX: image shown as the preview instead of the token.
+ * @param {Function} [options.resolve] - BLFX: called once with the placement, or null when cancelled.
+ * @returns {boolean} Whether the session started.
  */
-function startTeleportSession({ sourceToken, item, itemName, range, checkCollision, measureType }) {
+function startTeleportSession({ mode = "aa", sourceToken, item, itemName, range, checkCollision, measureType, customImg, customImgScale, resolve }) {
     try {
         // Clean up any stale session
         if (activeSession) {
@@ -190,7 +266,7 @@ function startTeleportSession({ sourceToken, item, itemName, range, checkCollisi
         const onPointerDownBound = (event) => onPointerDown(event);
         const onKeyDownBound = (event) => onKeyDown(event);
 
-        setupStageInterception(onPointerDownBound);
+        if (mode === "aa") setupStageInterception(onPointerDownBound);
 
         // 1. Create Floating HUD Banner
         const hud = createTeleportHud({ itemName, range });
@@ -198,7 +274,7 @@ function startTeleportSession({ sourceToken, item, itemName, range, checkCollisi
         const detachPositioning = attachHudPositioning(hud);
 
         // 2. Create Ghost Token Preview
-        const ghost = createGhostToken(sourceToken);
+        const ghost = createGhostToken(sourceToken, { customImg, customImgScale });
         if (ghost?.container) {
             if (canvas.controls) {
                 canvas.controls.addChild(ghost.container);
@@ -222,6 +298,8 @@ function startTeleportSession({ sourceToken, item, itemName, range, checkCollisi
         lastMoveErrorLogged = false;
 
         activeSession = {
+            mode,
+            resolve,
             sourceToken,
             item,
             itemName,
@@ -240,10 +318,48 @@ function startTeleportSession({ sourceToken, item, itemName, range, checkCollisi
         if (canvas.mousePosition) {
             updateGhostAndHud(canvas.mousePosition);
         }
+        return true;
     } catch (err) {
         console.error(`Nik's Foundry Tweaks | Failed to start Teleport UI session: ${err?.message || err}`);
         ui.notifications?.error(`Teleport UI Error: ${err.message}`);
+        // A BLFX session that fails to start falls back to BLFX's own crosshair, so don't resolve it here
+        if (activeSession) activeSession.resolve = null;
         cleanupSession(false);
+        return false;
+    }
+}
+
+/**
+ * Formats the distance readout: "15 / 30 ft" with a range, "15 ft" without.
+ */
+function formatDistance(distance, range, unit) {
+    return (range == null) ? `${distance} ${unit}` : `${distance} / ${range} ${unit}`;
+}
+
+/**
+ * The ghost's top-left corner for the cursor position.
+ * A-A puts the token's top-left on the hovered grid space (matching where A-A moves it); BLFX centers the token on
+ * the cursor and snaps it like a token drag (matching BLFX's own crosshair).
+ */
+function getDestination(mousePos) {
+    const { mode, sourceToken } = activeSession;
+    if (mode === "blfx") {
+        const position = { x: mousePos.x - (sourceToken.w / 2), y: mousePos.y - (sourceToken.h / 2) };
+        return sourceToken.getSnappedPosition?.(position) ?? canvas.grid.getTopLeftPoint(mousePos);
+    }
+    return canvas.grid.getTopLeftPoint(mousePos);
+}
+
+/**
+ * Measures the grid distance from the caster to a destination (both top-left corners).
+ */
+function measureDistance(sourceToken, topLeft) {
+    try {
+        return canvas.grid.measurePath([sourceToken, topLeft], { gridSpaces: true }).distance;
+    } catch {
+        const dx = (topLeft.x - sourceToken.x) / (canvas.grid.size || 100);
+        const dy = (topLeft.y - sourceToken.y) / (canvas.grid.size || 100);
+        return Math.round(Math.hypot(dx, dy) * (canvas.scene?.grid?.distance || 5));
     }
 }
 
@@ -263,12 +379,12 @@ function createTeleportHud({ itemName, range }) {
             </div>
             <div class="nft-teleport-info">
                 <span class="nft-teleport-title">${escapeHTML(itemName)}</span>
-                <span class="nft-teleport-subtitle">Choose destination (Max: ${range} ${unit})</span>
+                <span class="nft-teleport-subtitle">${range == null ? "Choose destination" : `Choose destination (Max: ${range} ${unit})`}</span>
             </div>
             <div class="nft-teleport-divider" aria-hidden="true"></div>
             <div class="nft-teleport-status-badge in-range" id="nft-teleport-distance-badge">
                 <i class="fa-solid fa-location-dot"></i>
-                <span>0 / ${range} ${unit}</span>
+                <span>${formatDistance(0, range, unit)}</span>
             </div>
             <div class="nft-teleport-divider" aria-hidden="true"></div>
             <div class="nft-teleport-actions">
@@ -400,7 +516,7 @@ function getDynamicRingTexture(name) {
  * - Directional mirroring and rotation preservation
  * - Target grid footprint indicator
  */
-function createGhostToken(sourceToken) {
+function createGhostToken(sourceToken, { customImg, customImgScale = 1 } = {}) {
     if (!sourceToken) return null;
 
     try {
@@ -411,7 +527,9 @@ function createGhostToken(sourceToken) {
 
         const w = sourceToken.w || canvas.grid?.size || 100;
         const h = sourceToken.h || canvas.grid?.size || 100;
-        const hasRing = !!(sourceToken.hasDynamicRing || sourceToken.document?.ring?.enabled);
+        // A BLFX custom image (e.g. Dimension Door's door) replaces the token art, without the ring
+        const hasRing = !customImg && !!(sourceToken.hasDynamicRing || sourceToken.document?.ring?.enabled);
+        const imgScale = customImg ? Math.max(0.1, Number(customImgScale) || 1) : 1;
 
         // Resolve Subject Scale Correction (e.g., 2 for 200% burst scale)
         let subjectScale = 1;
@@ -521,7 +639,13 @@ function createGhostToken(sourceToken) {
 
         // 2. Resolve Subject Texture safely from active token mesh/texture
         let texture = null;
-        if (sourceToken.mesh?.texture && sourceToken.mesh.texture !== PIXI.Texture.EMPTY && sourceToken.mesh.texture.valid) {
+        if (customImg) {
+            try {
+                texture = foundry.canvas?.getTexture?.(customImg) || PIXI.Texture.from(customImg);
+            } catch {
+                texture = null;
+            }
+        } else if (sourceToken.mesh?.texture && sourceToken.mesh.texture !== PIXI.Texture.EMPTY && sourceToken.mesh.texture.valid) {
             texture = sourceToken.mesh.texture;
         } else if (sourceToken.texture && sourceToken.texture !== PIXI.Texture.EMPTY && sourceToken.texture.valid) {
             texture = sourceToken.texture;
@@ -544,8 +668,8 @@ function createGhostToken(sourceToken) {
         let sprite = null;
         if (texture) {
             // Directional mirroring (scaleX/scaleY < 0)
-            const mirrorX = (sourceToken.document?.texture?.scaleX ?? 1) < 0 ? -1 : 1;
-            const mirrorY = (sourceToken.document?.texture?.scaleY ?? 1) < 0 ? -1 : 1;
+            const mirrorX = (!customImg && (sourceToken.document?.texture?.scaleX ?? 1) < 0) ? -1 : 1;
+            const mirrorY = (!customImg && (sourceToken.document?.texture?.scaleY ?? 1) < 0) ? -1 : 1;
 
             sprite = new PIXI.Sprite(texture);
             sprite.anchor.set(0.5, 0.5);
@@ -557,7 +681,7 @@ function createGhostToken(sourceToken) {
             if (Number.isFinite(texW) && texW > 0 && Number.isFinite(texH) && texH > 0) {
                 const fitScale = hasRing
                     ? Math.min((w * ringScaleFactor * subjectScale) / texW, (h * ringScaleFactor * subjectScale) / texH)
-                    : Math.min(w / texW, h / texH);
+                    : Math.min(w / texW, h / texH) * imgScale;
                 const safeScale = (Number.isFinite(fitScale) && fitScale > 0) ? fitScale : 1;
                 sprite.scale.set(safeScale * mirrorX, safeScale * mirrorY);
                 sprite.visible = true;
@@ -572,7 +696,7 @@ function createGhostToken(sourceToken) {
                         if (Number.isFinite(nw) && nw > 0 && Number.isFinite(nh) && nh > 0) {
                             const fitScale = hasRing
                                 ? Math.min((w * ringScaleFactor * subjectScale) / nw, (h * ringScaleFactor * subjectScale) / nh)
-                                : Math.min(w / nw, h / nh);
+                                : Math.min(w / nw, h / nh) * imgScale;
                             const safeScale = (Number.isFinite(fitScale) && fitScale > 0) ? fitScale : 1;
                             sprite.scale.set(safeScale * mirrorX, safeScale * mirrorY);
                             sprite.visible = true;
@@ -586,10 +710,10 @@ function createGhostToken(sourceToken) {
                     texture.once?.("update", applyDimensions);
                 }
             }
-            sprite.alpha = sourceToken.document?.alpha ?? 1.0;
+            sprite.alpha = customImg ? 1.0 : (sourceToken.document?.alpha ?? 1.0);
 
             // Match token facing angle if rotation is unlocked
-            if (!sourceToken.document?.lockRotation && sourceToken.document?.rotation) {
+            if (!customImg && !sourceToken.document?.lockRotation && sourceToken.document?.rotation) {
                 sprite.angle = sourceToken.document.rotation;
             }
 
@@ -645,8 +769,8 @@ function updateGhostAndHud(mousePos) {
 
     const { sourceToken, range, checkCollision, ghost, hud } = activeSession;
 
-    // Calculate snapped grid point matching Autoanimations logic
-    const topLeft = canvas.grid.getTopLeftPoint(mousePos);
+    // Snapped destination matching the source module's own placement logic
+    const topLeft = getDestination(mousePos);
     if (!topLeft) return;
 
     // Grid-cell throttle: if cursor moves within the same grid cell, position, distance, and collision are identical
@@ -662,14 +786,7 @@ function updateGhostAndHud(mousePos) {
     }
 
     // Measure distance using grid measurement with fallback
-    let distance = 0;
-    try {
-        distance = canvas.grid.measurePath([sourceToken, topLeft], { gridSpaces: true }).distance;
-    } catch {
-        const dx = (topLeft.x - sourceToken.x) / (canvas.grid.size || 100);
-        const dy = (topLeft.y - sourceToken.y) / (canvas.grid.size || 100);
-        distance = Math.round(Math.hypot(dx, dy) * (canvas.scene?.grid?.distance || 5));
-    }
+    const distance = measureDistance(sourceToken, topLeft);
 
     // Test collision against walls if enabled in A-A options
     let isBlocked = false;
@@ -682,7 +799,7 @@ function updateGhostAndHud(mousePos) {
         }
     }
 
-    const inRange = distance <= range;
+    const inRange = (range == null) || (distance <= range);
     const isValid = inRange && !isBlocked;
 
     if (ghost) {
@@ -783,10 +900,10 @@ function updateHudVisuals(hud, { distance, range, isValid, inRange, isBlocked })
 
     if (isValid) {
         badge.className = "nft-teleport-status-badge in-range";
-        badge.innerHTML = `<i class="fa-solid fa-location-dot"></i><span>${distance} / ${range} ${unit}</span>`;
+        badge.innerHTML = `<i class="fa-solid fa-location-dot"></i><span>${formatDistance(distance, range, unit)}</span>`;
     } else if (!inRange) {
         badge.className = "nft-teleport-status-badge out-of-range";
-        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>${distance} / ${range} ${unit} (Out of Range)</span>`;
+        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>${formatDistance(distance, range, unit)} (Out of Range)</span>`;
     } else if (isBlocked) {
         badge.className = "nft-teleport-status-badge blocked";
         badge.innerHTML = `<i class="fa-solid fa-ban"></i><span>Path Blocked</span>`;
@@ -806,17 +923,10 @@ function onPointerDown(event) {
     const mousePos = canvas.mousePosition;
     if (!mousePos) return;
 
-    const { sourceToken, range, checkCollision } = activeSession;
-    const topLeft = canvas.grid.getTopLeftPoint(mousePos);
-
-    let distance = 0;
-    try {
-        distance = canvas.grid.measurePath([sourceToken, topLeft], { gridSpaces: true }).distance;
-    } catch {
-        const dx = (topLeft.x - sourceToken.x) / (canvas.grid.size || 100);
-        const dy = (topLeft.y - sourceToken.y) / (canvas.grid.size || 100);
-        distance = Math.round(Math.hypot(dx, dy) * (canvas.scene?.grid?.distance || 5));
-    }
+    const { mode, sourceToken, range, checkCollision } = activeSession;
+    const topLeft = getDestination(mousePos);
+    if (!topLeft) return;
+    const distance = measureDistance(sourceToken, topLeft);
 
     let isBlocked = false;
     if (checkCollision && typeof sourceToken.checkCollision === "function") {
@@ -828,7 +938,23 @@ function onPointerDown(event) {
         }
     }
 
-    if (distance <= range && !isBlocked) {
+    if (mode === "blfx") {
+        // BLFX has no range or wall rules: any click picks the destination. Same result shape as BLFX's crosshair.
+        const center = sourceToken.getCenterPoint?.(topLeft)
+            ?? { x: topLeft.x + (sourceToken.w / 2), y: topLeft.y + (sourceToken.h / 2) };
+        activeSession.result = {
+            x: topLeft.x,
+            y: topLeft.y,
+            rotation: sourceToken.document?.rotation ?? 0,
+            distance: Math.trunc(distance),
+            center
+        };
+        debug("BLFX teleport destination clicked; handing it back to BLFX.");
+        cleanupSession(false);
+        return;
+    }
+
+    if ((range == null || distance <= range) && !isBlocked) {
         // Valid destination chosen: A-A's listener will move the token and play the sequence.
         // Clean up our UI elements immediately.
         debug("Valid teleport destination clicked; cleaning up UI for animation sequence.");
@@ -867,8 +993,8 @@ export function cancelTeleport() {
         capturedAAListener = null;
     }
 
-    // 2. End Sequencer border effect named "teleportation"
-    if (typeof Sequencer !== "undefined" && Sequencer.EffectManager) {
+    // 2. End Sequencer border effect named "teleportation" (A-A only; BLFX draws none)
+    if ((activeSession.mode === "aa") && (typeof Sequencer !== "undefined") && Sequencer.EffectManager) {
         try {
             Sequencer.EffectManager.endEffects({ name: "teleportation" });
             debug("Ended Sequencer teleportation border effects");
@@ -890,7 +1016,7 @@ export function cancelTeleport() {
 function cleanupSession(isCancel = false) {
     if (!activeSession) return;
 
-    const { hud, ghost, detachPositioning, onPointerMoveBound, onPointerDownBound, onKeyDownBound } = activeSession;
+    const { hud, ghost, detachPositioning, onPointerMoveBound, onPointerDownBound, onKeyDownBound, resolve, result } = activeSession;
     detachPositioning?.();
 
     // Fade out and remove HUD banner
@@ -939,4 +1065,11 @@ function cleanupSession(isCancel = false) {
     activeSession = null;
     isUpdatingGhost = false;
     lastMoveErrorLogged = false;
+
+    // BLFX waits on the session: hand back the destination, or null (cancelled, scene change, token deleted)
+    try {
+        resolve?.(result ?? null);
+    } catch (err) {
+        console.warn(`Nik's Foundry Tweaks | Failed to hand the teleport destination to BLFX: ${err?.message || err}`);
+    }
 }

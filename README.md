@@ -51,7 +51,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Carolingian UI Theme Harmony](#carolingian-ui-theme-harmony)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clear Targets Token Control Button](#clear-targets-token-control-button)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Disable Underground Token Hiding](#disable-underground-token-hiding)** | Canvas & Tokens | ❌ Disabled | No |
-| **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations)** | Canvas & Tokens | ✅ Enabled | Yes |
+| **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations-blfx)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Delayed Disconnect Warning](#delayed-disconnect-warning)** | Utilities | ✅ Enabled | Yes |
@@ -126,12 +126,13 @@ Adds a dedicated crosshair button to the canvas Token Controls toolbar, position
 ### Disable Underground Token Hiding
 Prevents tokens with negative elevation from disappearing behind the scene background layer.
 
-### Enhanced Teleport Targeting UI (Automated Animations)
-Improves teleport preset destination picking (*Misty Step*, *Dimension Door*):
+### Enhanced Teleport Targeting UI (Automated Animations, BLFX)
+Improves teleport destination picking (*Misty Step*, *Dimension Door*) for Automated Animations teleport presets and Boss Loot FX (BLFX) teleports:
 * Snaps a translucent ghost token preview to the grid featuring the character's authentic dynamic token ring and rune colors.
 * Real-time status badges for valid range, out-of-range, and wall collision.
 * The range border follows the scene's grid rules: a square on square grids where every diagonal counts as 5 ft., a circle on other grids (overrides the preset's Circle / Square option).
 * Uninterrupted right-click canvas panning and clean <kbd>ESC</kbd> / Cancel flow.
+* **BLFX**: replaces BLFX's destination crosshair (*Misty Step*, *Dimension Door*, *Void Blink*, jumps and other BLFX teleports) with the same banner and ghost preview. BLFX sets no range and ignores walls, so the banner shows the distance only and every spot is valid. *Dimension Door*'s door image is shown as the preview. Right-click pans the canvas instead of cancelling; use <kbd>ESC</kbd> or Cancel. BLFX placements of objects (e.g. Portal Daggers) keep BLFX's own crosshair.
 
 ---
 
@@ -223,6 +224,7 @@ Hooks.once("niksTweaks.register", (api) => {
 * **libWrapper**: All method and property overrides register cooperatively via `libWrapper` when installed, with a standalone fallback otherwise.
 * **Carolingian UI**: Automatic color theme adoption for the dashboard and canvas banners, and top navigation clearance.
 * **Automated Animations**: Ghost token preview with dynamic token rings for teleport presets.
+* **Boss Loot FX (BLFX)**: The same teleport banner and ghost preview replace BLFX's destination crosshair.
 * **Nik's DnD5e Tweaks**: Requires this module from 14.70.0 on and adds its settings to the dashboard. With an older Nik's DnD5e Tweaks active, this module stays inactive (and tells the GM to update), so no feature runs twice.
 
 ---

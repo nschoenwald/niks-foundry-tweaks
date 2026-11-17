@@ -177,7 +177,7 @@ Hooks.once("init", () => {
 
     game.settings.register(MODULE_ID, "clientEnableAutoanimationsTeleportUI", {
         name: "Enhanced Teleport Targeting UI (Personal)",
-        hint: "Enables the floating destination HUD, ghost token preview, and ESC cancellation for Automated Animations teleport presets (if enabled by the GM).",
+        hint: "Enables the floating destination HUD, ghost token preview, and ESC cancellation for Automated Animations and BLFX teleports (if enabled by the GM).",
         scope: "client",
         config: false,
         type: Boolean,
@@ -461,8 +461,8 @@ Hooks.once("init", () => {
     });
 
     game.settings.register(MODULE_ID, "enableAutoanimationsTeleportUI", {
-        name: "Enhanced Teleport Targeting UI (Autoanimations)",
-        hint: "When using an Automated Animations teleport preset (e.g. Misty Step, Dimension Door), adds a floating screen banner with live range/distance readout, a ghost token preview under the cursor showing valid/invalid placement, and allows pressing ESC to cancel.",
+        name: "Enhanced Teleport Targeting UI (Autoanimations, BLFX)",
+        hint: "When picking a teleport destination with an Automated Animations teleport preset or a Boss Loot FX (BLFX) teleport (e.g. Misty Step, Dimension Door), adds a floating screen banner with live range/distance readout, a ghost token preview under the cursor showing valid/invalid placement, and allows pressing ESC to cancel.",
         scope: "world",
         config: false,
         type: Boolean,
