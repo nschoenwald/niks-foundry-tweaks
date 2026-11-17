@@ -5,8 +5,16 @@
  * @introduced v14.0.0 (moved from Nik's DnD5e Tweaks, added there in v14.32.0)
  * @updated v14.6.1 (Range border shape follows the scene's grid: a square on square grids with 5/5/5 diagonals, a circle otherwise)
  * @updated v14.8.0 (BLFX: replaces BLFX's destination crosshair with the same HUD, ghost preview and ESC cancellation)
+ * @updated v14.9.0 (Range and spell name for BLFX from the `teleportTargeting` extension; one session when A-A and BLFX
+ *   both teleport on the same cast; `api.teleportTargeting.pickDestination` for add-ons)
+ *
+ * Extension `teleportTargeting` (read for BLFX sessions):
+ *   `{ getTeleportInfo?: ({ sourceToken, source: "blfx" }) => { range?: number|null, itemName?: string } | null }`
+ *   The first extension returning a finite `range` (in scene units) wins. Nik's DnD5e Tweaks reads it from the
+ *   activity that was just used.
  */
 import { debug, isFeatureActive } from "../../context.js";
+import { getExtensions } from "../../settings-registry.js";
 import { attachHudPositioning } from "../../utils/hud-position-helper.js";
 import { patchMethod } from "../../utils/patch-helper.js";
 
@@ -31,6 +39,10 @@ import { patchMethod } from "../../utils/patch-helper.js";
  * which resolves `{ x, y, rotation, distance, center }` or `null` when cancelled. The wrapper below runs our session
  * instead and resolves the same shape. BLFX has no range or wall check, so the HUD shows the distance only.
  * Calls with `customCrosshairSquares` place an object of a fixed size (Portal Daggers), not the caster: left to BLFX.
+ *
+ * A-A and BLFX on the same cast (e.g. A-A's "Misty Step" preset and BLFX's auto-rec both match): two pickers and two
+ * teleport sequences fight over the token (position and opacity). We run one session: BLFX's. A-A's click listener
+ * is disarmed and its range border ended; A-A's preset range is used when the extension gives none.
  */
 
 let activeSession = null;
@@ -41,6 +53,13 @@ let originalOn = null;
 let isUpdatingGhost = false;
 let lastMoveErrorLogged = false;
 let pendingMoveRAF = null;
+/** While set, A-A's next stage pointerdown listener is dropped instead of added (A-A disarmed for a BLFX session). */
+let disarmAAListener = false;
+/** Until this time (ms), Sequencer effects named "teleportation" (A-A's range border) are ended as they appear. */
+let suppressAABorderUntil = 0;
+
+/** Sequencer effect name of A-A's range border. */
+const AA_BORDER_EFFECT = "teleportation";
 
 /**
  * Initializes the Autoanimations Teleport UI feature.
@@ -59,9 +78,15 @@ export function initAutoanimationsTeleportUI() {
 
         // Safeguard: if Sequencer ends the teleportation effect externally, clean up UI
         Hooks.on("endedSequencerEffect", (effect) => {
-            if (effect?.data?.name === "teleportation" && activeSession?.mode === "aa") {
+            if (effect?.data?.name === AA_BORDER_EFFECT && activeSession?.mode === "aa") {
                 cleanupSession(false);
             }
+        });
+
+        // A-A disarmed for a BLFX session: its range border may only appear after we disarmed it
+        Hooks.on("createSequencerEffect", (effect) => {
+            if ((effect?.data?.name !== AA_BORDER_EFFECT) || (Date.now() > suppressAABorderUntil)) return;
+            endAABorder();
         });
     }
 
@@ -111,20 +136,31 @@ async function onBLFXCustomCrosshair(wrapped, config, ...rest) {
         && (sourceToken.isOwner || game.user.isGM);
     if (!canHandle) return wrapped(config, ...rest);
 
+    // A-A asked for a destination for the same token on this cast: BLFX takes over, A-A's range carries over
+    const aaSession = ((activeSession?.mode === "aa") && (activeSession.sourceToken === sourceToken)) ? activeSession : null;
+
+    // BLFX doesn't pass the item to its crosshair: the system add-on tells range and name
+    const info = getTeleportInfo(sourceToken, "blfx");
+    const range = info.range ?? aaSession?.range ?? null;
+
     let resolveSession;
     const result = new Promise((resolve) => { resolveSession = resolve; });
     const started = startTeleportSession({
         mode: "blfx",
         sourceToken,
-        itemName: "Teleport", // BLFX doesn't pass the item to its crosshair
-        range: null,
+        itemName: info.itemName || aaSession?.itemName || "Teleport",
+        range,
         checkCollision: false,
         customImg,
         customImgScale,
         resolve: resolveSession
     });
     if (!started) return wrapped(config, ...rest);
-    debug(`Started BLFX teleport destination session for "${sourceToken.name}".`);
+    debug(`Started BLFX teleport destination session for "${sourceToken.name}" (range: ${range ?? "none"}).`);
+    if (aaSession) {
+        console.warn(`Nik's Foundry Tweaks | Teleport UI: Automated Animations and BLFX both teleport "${sourceToken.name}" on this cast; using BLFX's teleport. Turn one of them off for this item to avoid this.`);
+        disarmAA();
+    }
 
     // Like BLFX: get the actor sheet out of the way while picking, and bring it back afterwards
     const sheet = sourceToken.actor?.sheet;
@@ -134,6 +170,97 @@ async function onBLFXCustomCrosshair(wrapped, config, ...rest) {
     const placement = await result;
     if (restoreSheet) await sheet.maximize?.();
     return placement;
+}
+
+/**
+ * Range and name for a teleport whose source module doesn't tell them (BLFX), from the `teleportTargeting` extension.
+ * @param {Token} sourceToken
+ * @param {string} source - Which module asks ("blfx").
+ * @returns {{range: number|null, itemName: string|null}}
+ */
+function getTeleportInfo(sourceToken, source) {
+    const info = { range: null, itemName: null };
+    for (const ext of getExtensions("teleportTargeting")) {
+        try {
+            const data = ext.getTeleportInfo?.({ sourceToken, source });
+            if (!data) continue;
+            if ((info.range == null) && Number.isFinite(data.range) && (data.range > 0)) info.range = data.range;
+            if (!info.itemName && data.itemName) info.itemName = data.itemName;
+        } catch (err) {
+            console.warn(`Nik's Foundry Tweaks | teleportTargeting extension failed: ${err?.message || err}`);
+        }
+    }
+    return info;
+}
+
+/**
+ * Disarm A-A's teleport picker while a BLFX session runs for the same cast: remove its click listener (or drop it
+ * when A-A adds it later) and end its range border (also when it only appears later).
+ */
+function disarmAA() {
+    if (capturedAAListener && canvas.app?.stage) {
+        canvas.app.stage.removeListener("pointerdown", capturedAAListener);
+        capturedAAListener = null;
+        debug("Removed Automated Animations' teleport listener (BLFX session takes over).");
+    } else if (activeSession) {
+        disarmAAListener = true;
+        setupStageInterception(activeSession.onPointerDownBound);
+    }
+    suppressAABorderUntil = Date.now() + 5000;
+    endAABorder();
+}
+
+/**
+ * End A-A's range border effect.
+ */
+function endAABorder() {
+    if ((typeof Sequencer === "undefined") || !Sequencer.EffectManager) return;
+    try {
+        Sequencer.EffectManager.endEffects({ name: AA_BORDER_EFFECT });
+    } catch (err) {
+        console.warn(`Nik's Foundry Tweaks | Failed to end Sequencer teleportation effects: ${err?.message || err}`);
+    }
+}
+
+/**
+ * Pick a teleport destination with the HUD and ghost preview (public API: `api.teleportTargeting.pickDestination`).
+ * Nik's DnD5e Tweaks uses it for dnd5e's Teleport activity.
+ * @param {object} options
+ * @param {Token} options.sourceToken - The token that teleports (must be on the viewed scene).
+ * @param {string} [options.itemName="Teleport"] - Banner title.
+ * @param {number|null} [options.range=null] - Maximum distance in scene units; null or Infinity for no limit.
+ * @param {boolean} [options.checkCollision=false] - Mark spots behind walls as blocked.
+ * @param {string} [options.customImg] - Image shown as the preview instead of the token.
+ * @param {number} [options.customImgScale=1]
+ * @returns {Promise<{x: number, y: number, rotation: number, distance: number, center: {x: number, y: number}}|null|undefined>}
+ *   The destination (top-left `x`/`y` of the token), null when cancelled, undefined when the session couldn't start
+ *   (feature off, token not on the viewed scene, or an error): fall back to your own placement then.
+ */
+export async function pickTeleportDestination({ sourceToken, itemName = "Teleport", range = null, checkCollision = false, customImg, customImgScale = 1 } = {}) {
+    if (!isFeatureActive("enableAutoanimationsTeleportUI", "clientEnableAutoanimationsTeleportUI")) return undefined;
+    if (!(sourceToken instanceof foundry.canvas.placeables.Token) || (sourceToken.scene?.id !== canvas.scene?.id)) return undefined;
+    let resolveSession;
+    const result = new Promise((resolve) => { resolveSession = resolve; });
+    const started = startTeleportSession({
+        mode: "api",
+        sourceToken,
+        itemName,
+        range: Number.isFinite(range) ? range : null,
+        checkCollision,
+        customImg,
+        customImgScale,
+        resolve: resolveSession
+    });
+    if (!started) return undefined;
+    return result;
+}
+
+/**
+ * Whether the teleport UI is on for this user (public API: `api.teleportTargeting.isActive`).
+ * @returns {boolean}
+ */
+export function isTeleportTargetingActive() {
+    return isFeatureActive("enableAutoanimationsTeleportUI", "clientEnableAutoanimationsTeleportUI");
 }
 
 /**
@@ -160,6 +287,14 @@ function onAAPreDataSanitize(handler, data) {
     const itemName = handler.itemName || handler.item?.name || "Teleport";
 
     debug(`Detected Autoanimations Teleportation preset for "${itemName}" (range: ${range}, collision: ${checkCollision}, measure: ${measureType})`);
+
+    // BLFX already asks for a destination for this token on this cast: keep BLFX's session, disarm A-A
+    if ((activeSession?.mode === "blfx") && (activeSession.sourceToken === sourceToken)) {
+        console.warn(`Nik's Foundry Tweaks | Teleport UI: Automated Animations and BLFX both teleport "${sourceToken.name}" on this cast; using BLFX's teleport. Turn one of them off for this item to avoid this.`);
+        if (activeSession.range == null) setSessionRange(range);
+        disarmAA();
+        return;
+    }
 
     startTeleportSession({
         mode: "aa",
@@ -217,9 +352,15 @@ function setupStageInterception(ownPointerDownHandler) {
 
     const intercept = function(event, fn, context) {
         if (event === "pointerdown" && fn !== ownPointerDownHandler && !capturedAAListener) {
+            const drop = disarmAAListener;
+            restoreStageInterception();
+            if (drop) {
+                // A-A disarmed for a BLFX session: never add its listener
+                debug("Dropped Automated Animations' teleport listener (BLFX session takes over).");
+                return this;
+            }
             capturedAAListener = fn;
             debug("Captured Autoanimations pointerdown listener on stage");
-            restoreStageInterception();
         }
         return originalAddListener.call(this, event, fn, context);
     };
@@ -236,6 +377,7 @@ function setupStageInterception(ownPointerDownHandler) {
  */
 function restoreStageInterception() {
     if (!isInterceptingStage) return;
+    disarmAAListener = false;
     isInterceptingStage = false;
     if (originalAddListener && canvas.app?.stage) {
         canvas.app.stage.addListener = originalAddListener;
@@ -337,13 +479,27 @@ function formatDistance(distance, range, unit) {
 }
 
 /**
+ * Change the active session's range and refresh the banner (A-A's preset range for a BLFX session).
+ * @param {number|null} range
+ */
+function setSessionRange(range) {
+    if (!activeSession || !Number.isFinite(range) || (range <= 0)) return;
+    activeSession.range = range;
+    const unit = canvas.scene?.grid?.units || "ft";
+    const subtitle = activeSession.hud?.querySelector(".nft-teleport-subtitle");
+    if (subtitle) subtitle.textContent = `Choose destination (Max: ${range} ${unit})`;
+    activeSession.lastSnappedX = activeSession.lastSnappedY = undefined;
+    if (canvas.mousePosition) updateGhostAndHud(canvas.mousePosition);
+}
+
+/**
  * The ghost's top-left corner for the cursor position.
- * A-A puts the token's top-left on the hovered grid space (matching where A-A moves it); BLFX centers the token on
- * the cursor and snaps it like a token drag (matching BLFX's own crosshair).
+ * A-A puts the token's top-left on the hovered grid space (matching where A-A moves it); BLFX and API sessions center
+ * the token on the cursor and snap it like a token drag (matching BLFX's own crosshair).
  */
 function getDestination(mousePos) {
     const { mode, sourceToken } = activeSession;
-    if (mode === "blfx") {
+    if (mode !== "aa") {
         const position = { x: mousePos.x - (sourceToken.w / 2), y: mousePos.y - (sourceToken.h / 2) };
         return sourceToken.getSnappedPosition?.(position) ?? canvas.grid.getTopLeftPoint(mousePos);
     }
@@ -938,8 +1094,9 @@ function onPointerDown(event) {
         }
     }
 
-    if (mode === "blfx") {
-        // BLFX has no range or wall rules: any click picks the destination. Same result shape as BLFX's crosshair.
+    if (mode !== "aa") {
+        // BLFX / API: hand back the destination if it is in range and not blocked; same shape as BLFX's crosshair
+        if (((range != null) && (distance > range)) || isBlocked) return;
         const center = sourceToken.getCenterPoint?.(topLeft)
             ?? { x: topLeft.x + (sourceToken.w / 2), y: topLeft.y + (sourceToken.h / 2) };
         activeSession.result = {
@@ -949,7 +1106,7 @@ function onPointerDown(event) {
             distance: Math.trunc(distance),
             center
         };
-        debug("BLFX teleport destination clicked; handing it back to BLFX.");
+        debug(`Teleport destination clicked (${mode}); handing it back.`);
         cleanupSession(false);
         return;
     }

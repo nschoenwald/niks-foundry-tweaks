@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.9.0] - 2026-11-17
+### Added
+- **Enhanced Teleport Targeting UI**: System modules can now supply the range and spell name of BLFX teleports. Nik's DnD5e Tweaks 14.101.0 reads them from the spell you cast and also brings the banner to D&D 5e's own Teleport activity.
+
+### Fixed
+- **Enhanced Teleport Targeting UI**: When Automated Animations and BLFX both teleport on the same cast (e.g. A-A's *Misty Step* preset and BLFX's auto-rec), you now pick the destination once and only BLFX's teleport plays, within A-A's range. Before, the second picker replaced the first (so the range limit was lost) and both teleports ran at once, which could leave the token invisible.
+
 ## [14.8.0] - 2026-11-17
 ### Added
 - **Enhanced Teleport Targeting UI**: Now also works with Boss Loot FX (BLFX). When a BLFX teleport (e.g. *Misty Step*, *Dimension Door*, *Void Blink*) asks for a destination, you get the same banner with a live distance readout and the ghost token preview instead of BLFX's crosshair. Press <kbd>ESC</kbd> or Cancel to stop; right-click pans the canvas as usual. BLFX sets no maximum range, so the banner shows the distance only.

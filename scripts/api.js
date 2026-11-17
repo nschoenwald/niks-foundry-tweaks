@@ -24,14 +24,22 @@
  * - `hidePrivateGMRolls`: `{ isRoll?: (message) => boolean }`
  * - `autoAddTokensToCombat`: `{ skipToken?: (tokenDocument) => boolean }`
  * - `carolingianHarmony`: `{ combatantClass?: (combatant) => string|null }`
+ * - `teleportTargeting`: `{ getTeleportInfo?: ({ sourceToken, source }) => { range?: number|null, itemName?: string } | null }`
+ *   (range in scene units for teleports whose module doesn't tell it, e.g. BLFX; API_VERSION 3)
  *
  * Setting entries of a schema can use `list: true` with `choicePicker: { getGroups, mode?, normalize?, noun?, resetTitle? }`
  * to pick entries from known options (API_VERSION 2, see `settings-choice-picker.js`).
+ *
+ * `teleportTargeting.isActive()` / `teleportTargeting.pickDestination({ sourceToken, itemName?, range?, checkCollision?,
+ * customImg?, customImgScale? })`: the teleport HUD and ghost preview as a destination picker. Resolves
+ * `{ x, y, rotation, distance, center }`, null when cancelled, or undefined when it couldn't start (API_VERSION 3,
+ * see `autoanimations-teleport-ui.js`).
  *
  * Bump `API_VERSION` when something here changes in a way add-ons must know about.
  *
  * @introduced v14.0.0
  * @updated v14.7.0 (API_VERSION 2: `choicePicker` setting option)
+ * @updated v14.9.0 (API_VERSION 3: `teleportTargeting` picker and extension)
  */
 import { createContext } from "./utils/create-context.js";
 import { attachHudPositioning } from "./utils/hud-position-helper.js";
@@ -40,9 +48,10 @@ import {
     registerUnavailableWith, resolveSettingId
 } from "./settings-registry.js";
 import { NiksTweaksSettingsApp } from "./settings-app.js";
+import { isTeleportTargetingActive, pickTeleportDestination } from "./features/canvas-tokens/autoanimations-teleport-ui.js";
 
 /** Version of the add-on contract. */
-export const API_VERSION = 2;
+export const API_VERSION = 3;
 
 /**
  * Build the API object.
@@ -67,6 +76,11 @@ export function createApi() {
         getExtensions,
         // Shared helpers
         createContext,
-        attachHudPositioning
+        attachHudPositioning,
+        // Teleport destination picker (Enhanced Teleport Targeting UI)
+        teleportTargeting: {
+            isActive: isTeleportTargetingActive,
+            pickDestination: pickTeleportDestination
+        }
     };
 }
