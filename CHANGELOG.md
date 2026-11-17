@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.9.1] - 2026-11-17
+### Fixed
+- **Enhanced Teleport Targeting UI**: BLFX teleports and D&D 5e's Teleport activity now show a range border around the caster when the range is known (Automated Animations' border is removed when BLFX takes over). It is cyan while the destination is in range and red when it isn't, and follows the grid's diagonal rule: a square for 5/5/5 diagonals, an octagon for 5/10/5, a hexagon on hex grids and a circle on gridless scenes.
+
 ## [14.9.0] - 2026-11-17
 ### Added
 - **Enhanced Teleport Targeting UI**: System modules can now supply the range and spell name of BLFX teleports. Nik's DnD5e Tweaks 14.101.0 reads them from the spell you cast and also brings the banner to D&D 5e's own Teleport activity.

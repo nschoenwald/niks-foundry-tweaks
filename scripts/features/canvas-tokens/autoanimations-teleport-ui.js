@@ -7,6 +7,7 @@
  * @updated v14.8.0 (BLFX: replaces BLFX's destination crosshair with the same HUD, ghost preview and ESC cancellation)
  * @updated v14.9.0 (Range and spell name for BLFX from the `teleportTargeting` extension; one session when A-A and BLFX
  *   both teleport on the same cast; `api.teleportTargeting.pickDestination` for add-ons)
+ * @updated v14.9.1 (Range border for BLFX and API sessions, which have no A-A border: follows the grid's diagonal rule)
  *
  * Extension `teleportTargeting` (read for BLFX sessions):
  *   `{ getTeleportInfo?: ({ sourceToken, source: "blfx" }) => { range?: number|null, itemName?: string } | null }`
@@ -425,6 +426,9 @@ function startTeleportSession({ mode = "aa", sourceToken, item, itemName, range,
             }
         }
 
+        // 2b. Range border: A-A draws its own; BLFX and API sessions get ours
+        const rangeGraphics = (mode !== "aa") ? createRangeGraphics() : null;
+
         // 3. Set crosshair cursor on canvas
         const canvasElement = canvas.app?.canvas ?? canvas.app?.view;
         if (canvasElement) {
@@ -451,10 +455,13 @@ function startTeleportSession({ mode = "aa", sourceToken, item, itemName, range,
             hud,
             detachPositioning,
             ghost,
+            rangeGraphics,
             onPointerMoveBound,
             onPointerDownBound,
             onKeyDownBound
         };
+
+        drawRangeBorder(true);
 
         // Initial update with current cursor position
         if (canvas.mousePosition) {
@@ -488,8 +495,68 @@ function setSessionRange(range) {
     const unit = canvas.scene?.grid?.units || "ft";
     const subtitle = activeSession.hud?.querySelector(".nft-teleport-subtitle");
     if (subtitle) subtitle.textContent = `Choose destination (Max: ${range} ${unit})`;
+    if ((activeSession.mode !== "aa") && !activeSession.rangeGraphics) activeSession.rangeGraphics = createRangeGraphics();
+    activeSession.borderInRange = undefined;
+    drawRangeBorder(true);
     activeSession.lastSnappedX = activeSession.lastSnappedY = undefined;
     if (canvas.mousePosition) updateGhostAndHud(canvas.mousePosition);
+}
+
+/**
+ * Create the PIXI graphics of our range border, below the ghost preview.
+ * @returns {PIXI.Graphics|null}
+ */
+function createRangeGraphics() {
+    const parent = canvas.controls ?? canvas.stage;
+    if (!parent) return null;
+    const graphics = new PIXI.Graphics();
+    graphics.eventMode = "none";
+    graphics.zIndex = 999;
+    parent.addChild(graphics);
+    return graphics;
+}
+
+/**
+ * Draw the range border around the caster (BLFX and API sessions with a range), cyan in range, red out of range.
+ * The shape follows the grid type and diagonal rule (`BaseGrid#getCircle`: a square for 5/5/5 diagonals, an octagon
+ * for 5/10/5, a hexagon on hex grids, a circle when gridless). It is pushed out by half the caster's size so it
+ * wraps the outer edge of the furthest space the teleported token can cover.
+ * @param {boolean} inRange
+ */
+function drawRangeBorder(inRange) {
+    const session = activeSession;
+    const graphics = session?.rangeGraphics;
+    if (!graphics || graphics.destroyed) return;
+    if (session.range == null) {
+        graphics.clear();
+        return;
+    }
+    if (session.borderInRange === inRange) return;
+    session.borderInRange = inRange;
+
+    const { sourceToken, range } = session;
+    const grid = canvas.grid;
+    const center = sourceToken.center;
+    const sizeInSpaces = Math.max(sourceToken.document?.width ?? 1, sourceToken.document?.height ?? 1);
+    const padding = grid?.isGridless ? 0 : ((grid?.distance || 5) * sizeInSpaces / 2);
+
+    const color = inRange ? 0x00ffee : 0xff3344;
+    graphics.clear();
+    graphics.lineStyle(3, color, inRange ? 0.75 : 0.85);
+    graphics.beginFill(color, inRange ? 0.05 : 0.08);
+    let points = null;
+    try {
+        points = grid?.getCircle?.(center, range + padding);
+    } catch {
+        points = null;
+    }
+    if (points?.length) {
+        graphics.drawPolygon(points.flatMap(p => [p.x, p.y]));
+    } else {
+        const radius = ((range + padding) / (grid?.distance || 5)) * (grid?.size || 100);
+        graphics.drawCircle(center.x, center.y, radius);
+    }
+    graphics.endFill();
 }
 
 /**
@@ -965,6 +1032,7 @@ function updateGhostAndHud(mousePos) {
     if (hud) {
         updateHudVisuals(hud, { distance, range, isValid, inRange, isBlocked });
     }
+    drawRangeBorder(inRange);
 }
 
 /**
@@ -1173,7 +1241,7 @@ export function cancelTeleport() {
 function cleanupSession(isCancel = false) {
     if (!activeSession) return;
 
-    const { hud, ghost, detachPositioning, onPointerMoveBound, onPointerDownBound, onKeyDownBound, resolve, result } = activeSession;
+    const { hud, ghost, rangeGraphics, detachPositioning, onPointerMoveBound, onPointerDownBound, onKeyDownBound, resolve, result } = activeSession;
     detachPositioning?.();
 
     // Fade out and remove HUD banner
@@ -1191,6 +1259,16 @@ function cleanupSession(isCancel = false) {
             ghost.container.destroy({ children: true, texture: false, baseTexture: false });
         } catch (err) {
             console.warn(`Nik's Foundry Tweaks | Failed to destroy ghost token container: ${err?.message || err}`);
+        }
+    }
+
+    // Remove our range border
+    if (rangeGraphics && !rangeGraphics.destroyed) {
+        try {
+            rangeGraphics.parent?.removeChild(rangeGraphics);
+            rangeGraphics.destroy();
+        } catch (err) {
+            console.warn(`Nik's Foundry Tweaks | Failed to remove teleport range border: ${err?.message || err}`);
         }
     }
 
