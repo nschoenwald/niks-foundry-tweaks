@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.6.1] - 2026-11-17
+### Changed
+- **Enhanced Teleport Targeting UI**: The range border shown while picking a teleport destination now follows the scene's grid rules instead of the preset's Circle / Square option. On a square grid where every diagonal counts as 5 ft. it is a square, matching the squares you can actually reach. Other diagonal rules, hex grids and gridless scenes show a circle.
+
 ## [14.6.0] - 2026-11-16
 ### Added
 - **Delayed Disconnect Warning**: The "You have lost connection to the server" warning now only appears when the connection stays lost for a few seconds (5 by default, adjustable from 0 to 60 with **Disconnect Warning Delay (Seconds)**). Short drops that reconnect right away no longer show the warning and the "connection re-established" message. On by default; players can turn it off for themselves.

@@ -3,6 +3,7 @@
  * Description: Injects a floating destination HUD banner, ghost token preview with distance/wall collision detection, and ESC cancellation for Automated Animations teleport presets.
  *
  * @introduced v14.0.0 (moved from Nik's DnD5e Tweaks, added there in v14.32.0)
+ * @updated v14.6.1 (Range border shape follows the scene's grid: a square on square grids with 5/5/5 diagonals, a circle otherwise)
  */
 import { debug, isFeatureActive } from "../../context.js";
 import { attachHudPositioning } from "../../utils/hud-position-helper.js";
@@ -17,6 +18,7 @@ import { attachHudPositioning } from "../../utils/hud-position-helper.js";
  *   - Cyan glowing border and soft tint when valid destination
  *   - Red border with diagonal slash when out of range
  *   - Orange border with X indicator when blocked by collision
+ * - Range border shape follows the scene's grid instead of the preset's Circle / Square option
  * - Crosshair cursor on canvas
  * - Clean ESC / Cancel button cancellation that aborts targeting, detaches A-A's listener, and terminates the Sequencer effect
  * - Keeps camera position untouched
@@ -110,10 +112,26 @@ function onAAPreAnimationStart(sanitizedData) {
     if (!activeSession) return;
     if (sanitizedData?.primary?.options) {
         const opts = sanitizedData.primary.options;
+        opts.measureType = getGridMeasureType();
         if (opts.range !== undefined) activeSession.range = opts.range;
         if (opts.checkCollision !== undefined) activeSession.checkCollision = opts.checkCollision;
         if (opts.measureType !== undefined) activeSession.measureType = opts.measureType;
     }
+}
+
+/**
+ * The Automated Animations border shape that matches the scene's grid rules. A-A draws its range border
+ * either as a circle ("alternating") or as a square ("equidistant") around the caster, from the preset's
+ * Circle / Square option. The squares in range form a square only on square grids where every diagonal
+ * counts as one square (5/5/5); every other diagonal rule, hex grids and gridless scenes are closer to a circle.
+ * A-A's border is the only range outline, and its in-range check already measures with the grid, so only the
+ * shape is changed.
+ * @returns {"equidistant"|"alternating"}
+ */
+function getGridMeasureType() {
+    const grid = canvas.grid;
+    const isEquidistantSquare = !!grid?.isSquare && (grid.diagonals === CONST.GRID_DIAGONALS.EQUIDISTANT);
+    return isEquidistantSquare ? "equidistant" : "alternating";
 }
 
 /**

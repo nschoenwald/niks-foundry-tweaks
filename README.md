@@ -130,6 +130,7 @@ Prevents tokens with negative elevation from disappearing behind the scene backg
 Improves teleport preset destination picking (*Misty Step*, *Dimension Door*):
 * Snaps a translucent ghost token preview to the grid featuring the character's authentic dynamic token ring and rune colors.
 * Real-time status badges for valid range, out-of-range, and wall collision.
+* The range border follows the scene's grid rules: a square on square grids where every diagonal counts as 5 ft., a circle on other grids (overrides the preset's Circle / Square option).
 * Uninterrupted right-click canvas panning and clean <kbd>ESC</kbd> / Cancel flow.
 
 ---
