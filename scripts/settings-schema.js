@@ -6,7 +6,7 @@
  * places (e.g. "personalPreferences", "uiVisuals", "canvasTokens", "combatFlow", "utilities").
  *
  * Entry metadata as in the add-ons: `introduced`, `pairedWith`, `docs`, `keywords`, `parentKey`, `unavailableWith`,
- * `requiresModule`, `condition`, `list`, `statusPicker`.
+ * `requiresModule`, `condition`, `list`, `statusPicker`, `choicePicker` (see `settings-choice-picker.js`).
  *
  * @introduced v14.0.0
  */

@@ -231,6 +231,10 @@
                                     <button type="button" class="nft-btn secondary nft-list-edit-btn" data-action="editStatuses" data-key="{{this.key}}" title="Choose which statuses are hidden" {{#if this.locked}}disabled{{/if}}>
                                         <i class="fa-solid fa-eye-slash" inert></i> Choose <span class="nft-list-count-badge"><span class="nft-list-count">{{this.listCount}}</span>&nbsp;hidden</span>
                                     </button>
+                                    {{else if this.choicePicker}}
+                                    <button type="button" class="nft-btn secondary nft-list-edit-btn" data-action="editChoices" data-key="{{this.key}}" title="Open the picker" {{#if this.locked}}disabled{{/if}}>
+                                        <i class="fa-solid fa-list-check" inert></i> Choose <span class="nft-list-count-badge"><span class="nft-list-count">{{this.listCount}}</span></span>
+                                    </button>
                                     {{else}}
                                     <button type="button" class="nft-btn secondary nft-list-edit-btn" data-action="editList" data-key="{{this.key}}" title="Open the list editor" {{#if this.locked}}disabled{{/if}}>
                                         <i class="fa-solid fa-list" inert></i> Edit List <span class="nft-list-count-badge"><span class="nft-list-count">{{this.listCount}}</span></span>

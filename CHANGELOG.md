@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.7.0] - 2026-11-17
+### Added
+- **Settings Dashboard**: List settings can now offer a picker with the available options instead of a text list, e.g. the languages for Nik's DnD5e Tweaks' *World Language Filter*.
+
+### Changed
+- **Token HUD Condition Palette**: The *Hidden Statuses* picker uses the new picker. It looks and works as before.
+
 ## [14.6.1] - 2026-11-17
 ### Changed
 - **Enhanced Teleport Targeting UI**: The range border shown while picking a teleport destination now follows the scene's grid rules instead of the preset's Circle / Square option. On a square grid where every diagonal counts as 5 ft. it is a square, matching the squares you can actually reach. Other diagonal rules, hex grids and gridless scenes show a circle.

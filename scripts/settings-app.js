@@ -2,6 +2,7 @@ import { MODULE_ID, log } from "./context.js";
 import { SOURCE_MODULE_ID, routeMovedSettings } from "./migration.js";
 import { NiksListEditorApp, normalizeListValue, parseListValue } from "./settings-list-editor.js";
 import { NiksStatusPickerApp } from "./settings-status-picker.js";
+import { NiksChoicePickerApp } from "./settings-choice-picker.js";
 import { getAllSettings, getModule, getModuleIds, getTabs, getUnavailableWith, resolveSettingId } from "./settings-registry.js";
 
 const OVERVIEW_TAB = "overview";
@@ -180,7 +181,8 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             exportSettings: NiksTweaksSettingsApp.#onExportSettings,
             importSettings: NiksTweaksSettingsApp.#onImportSettings,
             editList: NiksTweaksSettingsApp.#onEditList,
-            editStatuses: NiksTweaksSettingsApp.#onEditStatuses,
+            editStatuses: NiksTweaksSettingsApp.#onEditChoices,
+            editChoices: NiksTweaksSettingsApp.#onEditChoices,
             toggleFilter: NiksTweaksSettingsApp.#onToggleFilter,
             revealSetting: NiksTweaksSettingsApp.#onRevealSetting,
             resetSetting: NiksTweaksSettingsApp.#onResetSetting,
@@ -204,7 +206,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
 
     /**
      * Open list editor windows, keyed by setting key. Closed together with the dashboard.
-     * @type {Map<string, NiksListEditorApp|NiksStatusPickerApp>}
+     * @type {Map<string, NiksListEditorApp|NiksChoicePickerApp>}
      */
     #listEditors = new Map();
 
@@ -1030,13 +1032,13 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Open the status picker for a status list setting. Apply writes the hidden IDs into the dashboard's
-     * hidden input; they are stored when the dashboard is saved.
+     * Open the picker of a list setting with `statusPicker` or `choicePicker`. Apply writes the values into the
+     * dashboard's hidden input; they are stored when the dashboard is saved.
      * @this {NiksTweaksSettingsApp}
      * @param {PointerEvent} event
      * @param {HTMLElement} target
      */
-    static #onEditStatuses(event, target) {
+    static #onEditChoices(event, target) {
         const key = target.dataset.key;
         const setting = getAllSettings().find(s => s.key === key);
         const input = this.element.querySelector(`input[name="${key}"]`);
@@ -1048,8 +1050,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             return;
         }
 
-        const picker = new NiksStatusPickerApp({
-            isCondition: setting.statusPicker?.isCondition,
+        const options = {
             settingKey: key.replaceAll(".", "-"),
             settingName: setting.name,
             hint: setting.hint,
@@ -1063,7 +1064,32 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
                 target.title = "Edited. Use Save Changes to store this choice.";
                 this.#queueRefresh();
             }
-        });
+        };
+        let picker;
+        if (setting.choicePicker) {
+            const config = setting.choicePicker;
+            // Sibling settings by their own key, read from the dashboard's current (unsaved) form values
+            const readValue = (settingKey) => this.#currentValue(settingKey.includes(".") ? settingKey : `${setting.module}.${settingKey}`);
+            let mode = config.mode;
+            if (typeof mode === "function") {
+                try {
+                    mode = mode(readValue);
+                } catch (err) {
+                    console.error(`${MODULE_ID} | Choice picker mode of ${key} failed:`, err);
+                    mode = "hide";
+                }
+            }
+            picker = new NiksChoicePickerApp({
+                ...options,
+                getGroups: config.getGroups,
+                normalize: config.normalize,
+                noun: config.noun,
+                resetTitle: config.resetTitle,
+                mode
+            });
+        } else {
+            picker = new NiksStatusPickerApp({ ...options, isCondition: setting.statusPicker?.isCondition });
+        }
         picker.addEventListener("close", () => this.#listEditors.delete(key), { once: true });
         this.#listEditors.set(key, picker);
         picker.render({ force: true });

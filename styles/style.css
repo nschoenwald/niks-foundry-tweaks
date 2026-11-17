@@ -1654,6 +1654,58 @@ button.nft-feature-name:hover {
     color: #fca5a5;
 }
 
+/* Choice picker additions: nested options, "All …" group toggles, checkbox mode */
+
+.nft-settings-app .nft-status-pick[style*="--nft-choice-depth"] {
+    padding-left: calc(8px + var(--nft-choice-depth, 0) * 14px);
+}
+
+.nft-settings-app .nft-status-pick .nft-list-editor-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nft-settings-app .nft-status-pick.nft-choice-pick-group {
+    grid-column: 1 / -1;
+    font-style: italic;
+}
+
+.nft-choice-branch {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.nft-choice-branch > .nft-status-pick:first-child {
+    grid-column: 1 / -1;
+}
+
+.nft-settings-app .nft-status-pick.covered-choice.hidden-status .nft-list-editor-name {
+    text-decoration: none;
+}
+
+.nft-settings-app .nft-status-pick.select-mode .nft-status-pick-eye {
+    color: #64748b;
+}
+
+.nft-settings-app .nft-status-pick.select-mode.active-choice {
+    background: rgba(255, 100, 0, 0.12);
+    border-color: rgba(255, 100, 0, 0.45);
+}
+
+.nft-settings-app .nft-status-pick.select-mode.active-choice .nft-status-pick-eye {
+    color: #fb923c;
+}
+
+.nft-settings-app .nft-status-pick.select-mode.covered-choice .nft-status-pick-eye {
+    color: #fb923c;
+    opacity: 0.55;
+}
+
 /* ==========================================================================
    Autoanimations Teleport Targeting UI
    ========================================================================== */

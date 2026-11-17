@@ -25,9 +25,13 @@
  * - `autoAddTokensToCombat`: `{ skipToken?: (tokenDocument) => boolean }`
  * - `carolingianHarmony`: `{ combatantClass?: (combatant) => string|null }`
  *
+ * Setting entries of a schema can use `list: true` with `choicePicker: { getGroups, mode?, normalize?, noun?, resetTitle? }`
+ * to pick entries from known options (API_VERSION 2, see `settings-choice-picker.js`).
+ *
  * Bump `API_VERSION` when something here changes in a way add-ons must know about.
  *
  * @introduced v14.0.0
+ * @updated v14.7.0 (API_VERSION 2: `choicePicker` setting option)
  */
 import { createContext } from "./utils/create-context.js";
 import { attachHudPositioning } from "./utils/hud-position-helper.js";
@@ -38,7 +42,7 @@ import {
 import { NiksTweaksSettingsApp } from "./settings-app.js";
 
 /** Version of the add-on contract. */
-export const API_VERSION = 1;
+export const API_VERSION = 2;
 
 /**
  * Build the API object.
