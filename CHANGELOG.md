@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.10.1] - 2026-11-18
+### Fixed
+- **Compact File Picker**: The source tabs line up with the rows below instead of sticking out to the left, and the upload and selected file icons sit next to their fields. The S3 bucket list is only as wide as the bucket name, leaving more room for the search field.
+
 ## [14.10.0] - 2026-11-18
 ### Added
 - **Compact File Picker**: The file picker can be resized and opens at the size you last gave it, keeping that size while you browse. A new Small Tiles view shows tiles at two thirds of the regular size. The controls take less room: tabs, S3 bucket, search and display mode buttons, and upload and selected file each fit on one row, and favorites show one line until you hover over them. Your display mode is remembered between sessions. Players can turn it off for themselves.
