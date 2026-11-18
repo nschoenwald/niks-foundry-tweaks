@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.13.0] - 2026-11-18
+### Added
+- **File Picker Thumbnails**: The file picker's Tiles, Small Tiles and Thumbnails views show small thumbnails instead of the full-size images. Your browser downloads each image once, shrinks it and keeps the thumbnail, so folders with many large images open and scroll much faster from the second visit on. Images load as they scroll into view. "Refresh Thumbnails" in the picker's ⋮ menu remakes them for the current folder after you replace a file. Works with User Data, Core Data and Amazon S3. Players can turn it off for themselves.
+
 ## [14.12.2] - 2026-11-18
 ### Fixed
 - **Compact File Picker**: The selected file field at the bottom uses all of the room next to the upload button again (it stayed narrow with some UI themes, such as Carolingian UI).

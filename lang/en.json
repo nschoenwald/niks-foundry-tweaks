@@ -19,5 +19,6 @@
   "NFT.FolderCopyMove.Copied": "Copied {name} to {folder}.",
   "NFT.FolderCopyMove.Moved": "Moved {name} to {folder}.",
 
-  "NFT.CompactFilePicker.SmallTiles": "Small Tiles"
+  "NFT.CompactFilePicker.SmallTiles": "Small Tiles",
+  "NFT.FilePickerThumbnails.Refresh": "Refresh Thumbnails"
 }

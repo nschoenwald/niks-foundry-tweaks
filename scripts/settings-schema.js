@@ -131,6 +131,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "clientEnableFilePickerThumbnails",
+                            introduced: "14.13.0",
+                            pairedWith: "enableFilePickerThumbnails",
+                            name: "File Picker Thumbnails",
+                            hint: "Shows small thumbnails, stored in your browser, instead of the full-size images in the file picker (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
                             key: "clientEnableCompactFilePicker",
                             introduced: "14.10.0",
                             pairedWith: "enableCompactFilePicker",
@@ -270,6 +280,17 @@ export function getSettingsSchema() {
                             keywords: ["long names", "sidebar"],
                             name: "Sidebar Multi-line Names",
                             hint: "Allows long document names in the right sidebar (Actors, Items, Scenes, etc.) to wrap onto multiple lines instead of being cut off.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableFilePickerThumbnails",
+                            introduced: "14.13.0",
+                            docs: "file-picker-thumbnails",
+                            keywords: ["file picker", "image browser", "thumbnails", "performance", "s3"],
+                            name: "File Picker Thumbnails",
+                            hint: "The file picker's tile and thumbnail views show small thumbnails instead of scaling down the full-size images. Each browser downloads an image once, shrinks it and keeps the thumbnail, so folders with many large images open and scroll much faster the next time. \"Refresh Thumbnails\" in the picker's ⋮ menu remakes them for the current folder. Players can turn it off for themselves.",
                             type: "Boolean",
                             default: true,
                             scope: "world"

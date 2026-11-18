@@ -46,6 +46,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Sidebar Multi-line Names](#sidebar-multi-line-names)** | UI & Visuals | ✅ Enabled | No |
 | **[Copy & Move to Folder](#copy--move-to-folder)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Compact File Picker](#compact-file-picker)** | UI & Visuals | ✅ Enabled | Yes |
+| **[File Picker Thumbnails](#file-picker-thumbnails)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Sync Browser Tab Title](#sync-browser-tab-title)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Toolbar Limitation](#toolbar-limitation)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clearer Scene Control Toggles](#clearer-scene-control-toggles)** | UI & Visuals | ✅ Enabled | Yes |
@@ -114,6 +115,18 @@ Fits more files into Foundry's file picker (the Image Browser and the other file
 - **Favorites fold to one line.** A small arrow after "Favorites" shows that more are hidden; hover over the row (or tab into it) to show all of them.
 - **Remembers your display mode** between sessions, not just until the next reload.
 - **Clearer highlight** of the current or picked file in the tile views.
+
+See also [File Picker Thumbnails](#file-picker-thumbnails), which makes folders with many large images much faster.
+
+The GM can turn the feature off; players can turn it off for themselves.
+
+### File Picker Thumbnails
+Foundry's file picker shows every image at full size and lets the browser shrink it, so a folder of large portraits or maps downloads and decodes megabytes of images just to show small tiles. With this feature, the Tiles, Small Tiles and Thumbnails views show real thumbnails instead:
+
+- The first time an image appears, your browser downloads it once, shrinks it to a small thumbnail (256 px on the longest side) and keeps it in its own storage. From then on the picker shows the stored thumbnail: no download, almost nothing to decode, so folders open and scroll quickly.
+- Images load as they scroll into view, a few at a time. The large Images view, SVG icons and animated GIFs still use the original files.
+- Thumbnails are kept per browser, up to 4,000 of them (the least recently used are removed first), and are made again after 30 days. If you replace an image under the same name, choose **Refresh Thumbnails** in the picker's ⋮ menu to update the current folder right away.
+- Works with User Data, Core Data and Amazon S3. For S3, the bucket must allow cross-origin requests, which Foundry already needs for S3 images on the canvas. If a thumbnail can't be made, the picker shows the original image.
 
 The GM can turn the feature off; players can turn it off for themselves.
 
