@@ -8,6 +8,7 @@
  * @updated v14.9.0 (Range and spell name for BLFX from the `teleportTargeting` extension; one session when A-A and BLFX
  *   both teleport on the same cast; `api.teleportTargeting.pickDestination` for add-ons)
  * @updated v14.9.1 (Range border for BLFX and API sessions, which have no A-A border: follows the grid's diagonal rule)
+ * @updated v14.14.1 (Ghost preview is a clone of the token drawn by Foundry, so Dynamic Token Rings look right)
  *
  * Extension `teleportTargeting` (read for BLFX sessions):
  *   `{ getTeleportInfo?: ({ sourceToken, source: "blfx" }) => { range?: number|null, itemName?: string } | null }`
@@ -23,9 +24,8 @@ import { patchMethod } from "../../utils/patch-helper.js";
  * Enhanced UI for Automated Animations Teleport Preset:
  * - Floating screen banner with live distance readout, max range, item name, and [Cancel] button / [ESC] hotkey
  * - Ghost token preview on canvas snapped to grid under cursor:
- *   - Authentic Dynamic Token Ring representation (background disk, metallic double ring, outer glow)
- *   - Subject Scale Correction support (e.g. 2× sizing bursting over ring)
- *   - Directional mirroring and rotation preservation
+ *   - A preview clone of the token drawn by Foundry (like its drag preview), so Dynamic Token Rings, subject
+ *     scale, mirroring, rotation and fit look exactly like the token itself
  *   - Cyan glowing border and soft tint when valid destination
  *   - Red border with diagonal slash when out of range
  *   - Orange border with X indicator when blocked by collision
@@ -649,95 +649,91 @@ function escapeHTML(str) {
         .replace(/'/g, "&#039;");
 }
 
+/** Token children hidden on the ghost clone: only the token art (with its ring) is shown, not the token's HUD bits. */
+const GHOST_HIDDEN_CHILDREN = ["border", "nameplate", "bars", "tooltip", "effects", "targetPips", "targetArrows",
+    "levelIndicator", "turnMarker", "ruler"];
+
+/** Opacity of the ghost token, as for Foundry's own drag preview. */
+const GHOST_ALPHA = 0.8;
+
+/** Tints of the ghost token art per destination state. */
+const GHOST_TINTS = { valid: 0xffffff, outOfRange: 0xff7777, blocked: 0xff9955 };
+
 /**
- * Helper to safely parse color strings or numbers into numeric integer for PIXI tinting.
+ * Creates a preview clone of the token, drawn by Foundry itself like a token drag preview.
+ * The token's own mesh renders the art, so Dynamic Token Rings (shader, colors, background, subject texture and scale,
+ * ring effects), mirroring, rotation, anchor and fit look exactly like the real token.
+ * Our tint and opacity are applied after each render-flag pass, and the clone stays hidden until it is first positioned.
+ * @returns {Token|null}
  */
-function parseHexColor(colorVal, fallback = 0xe69a28) {
-    if (!colorVal) return fallback;
-    try {
-        if (typeof colorVal === "number") return colorVal;
-        if (typeof foundry !== "undefined" && foundry.utils?.Color) {
-            return foundry.utils.Color.from(colorVal).valueOf();
+function createGhostClone(sourceToken) {
+    const previewContainer = canvas.tokens?.preview;
+    if (!previewContainer || typeof sourceToken.clone !== "function") return null;
+    const clone = sourceToken.clone();
+    clone.eventMode = "none";
+    clone.interactiveChildren = false;
+    clone._nftGhost = { shown: false, tint: GHOST_TINTS.valid };
+
+    const applyRenderFlags = clone._applyRenderFlags;
+    clone._applyRenderFlags = function(flags) {
+        applyRenderFlags.call(this, flags);
+        applyGhostCloneState(this);
+    };
+
+    clone.visible = false;
+    previewContainer.addChild(clone);
+    clone.draw().then(() => {
+        if (!clone.destroyed) applyGhostCloneState(clone);
+    }).catch(err => {
+        console.warn(`Nik's Foundry Tweaks | Teleport UI: could not draw the ghost token: ${err?.message || err}`);
+    });
+    return clone;
+}
+
+/**
+ * Applies the ghost look on top of Foundry's rendering of the clone.
+ */
+function applyGhostCloneState(clone) {
+    const state = clone._nftGhost;
+    if (!state || clone.destroyed) return;
+    for (const key of GHOST_HIDDEN_CHILDREN) {
+        if (clone[key]) clone[key].visible = false;
+    }
+    if (!state.shown) clone.visible = false;
+    const mesh = clone.mesh;
+    if (!mesh || mesh.destroyed) return;
+    mesh.visible = state.shown && clone.visible;
+    mesh.alpha = GHOST_ALPHA * (clone.document?.alpha ?? 1);
+    if (state.tint === GHOST_TINTS.valid) mesh.tint = clone.document?.texture?.tint ?? 0xffffff;
+    else mesh.tint = state.tint;
+}
+
+/**
+ * Moves the ghost clone to a destination (top-left corner) and refreshes its look.
+ */
+function updateGhostClone(clone, { topLeft, tint }) {
+    if (!clone || clone.destroyed || !clone._nftGhost) return;
+    const state = clone._nftGhost;
+    if (topLeft) {
+        clone.document.updateSource({ x: topLeft.x, y: topLeft.y });
+        if (!state.shown) {
+            state.shown = true;
+            clone.renderFlags.set({ refreshVisibility: true });
         }
-        if (typeof Color !== "undefined") {
-            return Color.from(colorVal).valueOf();
-        }
-        return parseInt(String(colorVal).replace("#", ""), 16) || fallback;
-    } catch {
-        return fallback;
+        clone.renderFlags.set({ refreshPosition: true });
+    }
+    if (tint !== undefined) {
+        state.tint = tint;
+        clone.renderFlags.set({ refreshMesh: true });
     }
 }
 
 /**
- * Converts a Foundry little-endian color (BBGGRR) to a PIXI-compatible big-endian RRGGBB integer.
- * Foundry stores ring colors internally as 0xBBGGRR (R in LSB). PIXI tint expects 0xRRGGBB.
- */
-function littleEndianToRGBTint(val) {
-    const r = val & 0xFF;
-    const g = (val >> 8) & 0xFF;
-    const b = (val >> 16) & 0xFF;
-    return (r << 16) | (g << 8) | b;
-}
-
-/**
- * Safely resolves the PIXI.Texture for a dynamic token ring frame or background asset.
- * Queries PIXI Assets cache, Pixi TextureCache, Foundry TextureLoader spritesheet cache,
- * and baseTexture frame slicing as reliable fallbacks.
- */
-function getDynamicRingTexture(name) {
-    if (!name) return null;
-
-    // 1. Direct PIXI.Assets cache
-    try {
-        const tex = PIXI.Assets?.cache?.get?.(name);
-        if (tex && tex.valid && tex !== PIXI.Texture.EMPTY) return tex;
-    } catch { /* ignore */ }
-
-    // 2. PIXI TextureCache
-    try {
-        const tex = PIXI.utils?.TextureCache?.[name];
-        if (tex && tex.valid && tex !== PIXI.Texture.EMPTY) return tex;
-    } catch { /* ignore */ }
-
-    // 3. Foundry TextureLoader / canvas loader spritesheet cache
-    try {
-        const sheetPath = CONFIG.Token?.ring?.spritesheet;
-        if (sheetPath) {
-            const sheet = foundry.canvas?.TextureLoader?.loader?.getCache?.(sheetPath)
-                || PIXI.Assets?.cache?.get?.(sheetPath);
-            const tex = sheet?.textures?.[name];
-            if (tex && tex.valid && tex !== PIXI.Texture.EMPTY) return tex;
-        }
-    } catch { /* ignore */ }
-
-    // 4. BaseTexture frame slice fallback
-    try {
-        const ringClass = CONFIG.Token?.ring?.ringClass;
-        const sheetPath = CONFIG.Token?.ring?.spritesheet;
-        if (ringClass?.baseTexture?.valid && sheetPath) {
-            const sheet = foundry.canvas?.TextureLoader?.loader?.getCache?.(sheetPath)
-                || PIXI.Assets?.cache?.get?.(sheetPath);
-            const frameData = sheet?.data?.frames?.[name]?.frame;
-            if (frameData) {
-                const rect = new PIXI.Rectangle(frameData.x, frameData.y, frameData.w, frameData.h);
-                const sliced = new PIXI.Texture(ringClass.baseTexture, rect);
-                if (sliced.valid) return sliced;
-            }
-        }
-    } catch { /* ignore */ }
-
-    console.warn(`Nik's Foundry Tweaks | Teleport UI: could not resolve ring spritesheet texture "${name}" — using vector fallback.`);
-    return null;
-}
-
-/**
- * Creates the PIXI Container representing the ghost token preview.
- * When Dynamic Token Rings are enabled, creates an authentic composite preview:
- * - Authentic Dynamic Token Ring background disc (textured or tinted)
- * - Subject artwork enlarged by Subject Scale Correction (e.g. 2× sizing) bursting over the ring
- * - Authentic metallic sculpted Dynamic Token Ring frame tinted with the token's ring color
- * - Directional mirroring and rotation preservation
- * - Target grid footprint indicator
+ * Creates the ghost token preview.
+ * - Token art: a preview clone of the token drawn by Foundry ({@link createGhostClone}), so Dynamic Token Rings look
+ *   right. If no clone can be made, a plain sprite of the token art is used instead.
+ * - A BLFX custom image (e.g. Dimension Door's door) replaces the token art, without the ring.
+ * - The container (in the controls layer) holds the custom image or fallback sprite and the footprint indicator.
  */
 function createGhostToken(sourceToken, { customImg, customImgScale = 1 } = {}) {
     if (!sourceToken) return null;
@@ -750,205 +746,75 @@ function createGhostToken(sourceToken, { customImg, customImgScale = 1 } = {}) {
 
         const w = sourceToken.w || canvas.grid?.size || 100;
         const h = sourceToken.h || canvas.grid?.size || 100;
-        // A BLFX custom image (e.g. Dimension Door's door) replaces the token art, without the ring
-        const hasRing = !customImg && !!(sourceToken.hasDynamicRing || sourceToken.document?.ring?.enabled);
-        const imgScale = customImg ? Math.max(0.1, Number(customImgScale) || 1) : 1;
 
-        // Resolve Subject Scale Correction (e.g., 2 for 200% burst scale)
-        let subjectScale = 1;
-        if (sourceToken.document?.ring?.subject?.scale !== undefined) {
-            subjectScale = Math.max(0.1, Number(sourceToken.document.ring.subject.scale) || 1);
-        }
-
-        const cx = w / 2;
-        const cy = h / 2;
-
-        let bkgSprite = null;
-        let ringSprite = null;
-        let bkgGraphics = null;
-        let ringGraphics = null;
-        let colorBandGraphics = null;
-
-        let ringColor = 0xe69a28;
-        let bkgColor = 0xffffff;
-
-        // Spritesheet frames in Foundry include transparent VFX padding (~82.67% of frame is ring outer diameter).
-        // Scaling by subjectScaleAdjustment (~1.21) compensates for this padding in grid fit mode.
-        const ringScaleFactor = sourceToken.ring?.subjectScaleAdjustment
-            || (CONFIG.Token?.ring?.ringClass?.getRingDataBySize?.(Math.min(sourceToken.document?.width ?? 1, sourceToken.document?.height ?? 1))?.subjectScaleAdjustment)
-            || 1.21;
-
-        // Spritesheet frames in Foundry include transparent VFX padding (~82.67% of frame is ring outer diameter).
-        // Scaling by subjectScaleAdjustment (~1.21) makes the ring's outer rim match the token's 1x1 grid cell.
-        const ringW = Math.round(w * ringScaleFactor);
-        const ringH = Math.round(h * ringScaleFactor);
-
-        if (hasRing) {
-            const dynamicColors = sourceToken.getRingColors?.() || {};
-            const ringConfig = sourceToken.document?.ring;
-            const ringColorVal = dynamicColors.ring ?? ringConfig?.colors?.ring;
-            const bkgColorVal = dynamicColors.background ?? ringConfig?.colors?.background;
-
-            // Ring color: prefer explicit setting, fall back to spritesheet little-endian default (BBGGRR → RRGGBB).
-            if (ringColorVal) {
-                ringColor = parseHexColor(ringColorVal, 0xe69a28);
-            } else if (sourceToken.ring?.ringColorLittleEndian !== undefined) {
-                ringColor = littleEndianToRGBTint(sourceToken.ring.ringColorLittleEndian);
-            }
-
-            // Determine ring frame and background disc names
-            let ringName = sourceToken.ring?.ringName;
-            if (!ringName) {
-                const size = Math.min(sourceToken.document?.width ?? 1, sourceToken.document?.height ?? 1);
-                const ringData = CONFIG.Token?.ring?.ringClass?.getRingDataBySize?.(size);
-                ringName = ringData?.ringName;
-            }
-            if (!ringName) {
-                const size = Math.min(sourceToken.document?.width ?? 1, sourceToken.document?.height ?? 1);
-                if (size <= 0.5) ringName = "token-ring-tiny";
-                else if (size <= 1) ringName = "token-ring-med";
-                else if (size <= 2) ringName = "token-ring-large-huge";
-                else ringName = "token-ring-gargantuan";
-            }
-
-            // Color band dimensions from token ring configuration
-            const cb = sourceToken.ring?.colorBand || { startRadius: 0.6, endRadius: 0.721 };
-            const rInner = cb.startRadius * (ringW / 2);
-            const rOuter = cb.endRadius * (ringW / 2);
-            const rMid = (rInner + rOuter) / 2;
-            const bandThickness = Math.max(2, rOuter - rInner);
-
-            // A. Background disc: ONLY render if background color is explicitly configured (non-null/truthy).
-            // When null/unset, tokens have no background fill, preserving transparency around burst features.
-            if (bkgColorVal) {
-                bkgColor = parseHexColor(bkgColorVal, 0xffffff);
-                bkgGraphics = new PIXI.Graphics();
-                bkgGraphics.beginFill(bkgColor, 1.0);
-                bkgGraphics.drawCircle(cx, cy, rInner);
-                bkgGraphics.endFill();
-                container.addChild(bkgGraphics);
-            }
-
-            // B. Ring frame: authentic sculpted metallic spritesheet frame.
-            // Kept at tint 0xFFFFFF to preserve authentic bronze or steel metallic texture.
-            const ringTex = getDynamicRingTexture(ringName);
-            if (ringTex && ringTex.valid && ringTex !== PIXI.Texture.EMPTY) {
-                ringSprite = new PIXI.Sprite(ringTex);
-                ringSprite.anchor.set(0.5, 0.5);
-                ringSprite.position.set(cx, cy);
-                ringSprite.width = ringW;
-                ringSprite.height = ringH;
-                ringSprite.tint = 0xffffff;
-                ringSprite.alpha = 1;
-                container.addChild(ringSprite);
-            } else {
-                // Vector fallback when the spritesheet texture isn’t available
-                ringGraphics = new PIXI.Graphics();
-                const ringThickness = Math.max(3, Math.round(ringW * 0.12));
-                ringGraphics.lineStyle(1.5, 0x111111, 0.85);
-                ringGraphics.drawCircle(cx, cy, (ringW / 2) - 1);
-                ringGraphics.lineStyle(ringThickness, ringColor, 0.95);
-                ringGraphics.drawCircle(cx, cy, (ringW / 2) - 1 - (ringThickness / 2));
-                container.addChild(ringGraphics);
-            }
-
-            // C. Color band: covers the spritesheet channel with the character's vibrant ring color.
-            // Sits directly on top of the metallic ring frame, perfectly masking the default channel color (e.g. red).
-            colorBandGraphics = new PIXI.Graphics();
-            colorBandGraphics.lineStyle(bandThickness, ringColor, 1.0);
-            colorBandGraphics.drawCircle(cx, cy, rMid);
-            container.addChild(colorBandGraphics);
-        }
-
-        // 2. Resolve Subject Texture safely from active token mesh/texture
-        let texture = null;
-        if (customImg) {
+        let clone = null;
+        if (!customImg) {
             try {
-                texture = foundry.canvas?.getTexture?.(customImg) || PIXI.Texture.from(customImg);
-            } catch {
-                texture = null;
-            }
-        } else if (sourceToken.mesh?.texture && sourceToken.mesh.texture !== PIXI.Texture.EMPTY && sourceToken.mesh.texture.valid) {
-            texture = sourceToken.mesh.texture;
-        } else if (sourceToken.texture && sourceToken.texture !== PIXI.Texture.EMPTY && sourceToken.texture.valid) {
-            texture = sourceToken.texture;
-        } else if (sourceToken.document?.ring?.subject?.texture) {
-            try {
-                texture = foundry.canvas?.getTexture?.(sourceToken.document.ring.subject.texture)
-                    || PIXI.Texture.from(sourceToken.document.ring.subject.texture);
-            } catch {
-                texture = null;
-            }
-        } else if (sourceToken.document?.texture?.src) {
-            try {
-                texture = foundry.canvas?.getTexture?.(sourceToken.document.texture.src)
-                    || PIXI.Texture.from(sourceToken.document.texture.src);
-            } catch {
-                texture = null;
+                clone = createGhostClone(sourceToken);
+            } catch (err) {
+                console.warn(`Nik's Foundry Tweaks | Teleport UI: could not clone the token for the preview: ${err?.message || err}`);
+                clone = null;
             }
         }
 
         let sprite = null;
-        if (texture) {
-            // Directional mirroring (scaleX/scaleY < 0)
-            const mirrorX = (!customImg && (sourceToken.document?.texture?.scaleX ?? 1) < 0) ? -1 : 1;
-            const mirrorY = (!customImg && (sourceToken.document?.texture?.scaleY ?? 1) < 0) ? -1 : 1;
+        if (!clone) {
+            const imgScale = customImg ? Math.max(0.1, Number(customImgScale) || 1) : 1;
+            let texture = null;
+            if (customImg) {
+                try {
+                    texture = foundry.canvas?.getTexture?.(customImg) || PIXI.Texture.from(customImg);
+                } catch {
+                    texture = null;
+                }
+            } else if (sourceToken.mesh?.texture?.valid && sourceToken.mesh.texture !== PIXI.Texture.EMPTY) {
+                texture = sourceToken.mesh.texture;
+            } else if (sourceToken.document?.texture?.src) {
+                try {
+                    texture = foundry.canvas?.getTexture?.(sourceToken.document.texture.src)
+                        || PIXI.Texture.from(sourceToken.document.texture.src);
+                } catch {
+                    texture = null;
+                }
+            }
 
-            sprite = new PIXI.Sprite(texture);
-            sprite.anchor.set(0.5, 0.5);
-            sprite.position.set(cx, cy);
+            if (texture) {
+                const mirrorX = (!customImg && (sourceToken.document?.texture?.scaleX ?? 1) < 0) ? -1 : 1;
+                const mirrorY = (!customImg && (sourceToken.document?.texture?.scaleY ?? 1) < 0) ? -1 : 1;
+                sprite = new PIXI.Sprite(texture);
+                sprite.anchor.set(0.5, 0.5);
+                sprite.position.set(w / 2, h / 2);
 
-            const texW = texture.orig?.width || texture.width || 0;
-            const texH = texture.orig?.height || texture.height || 0;
-
-            if (Number.isFinite(texW) && texW > 0 && Number.isFinite(texH) && texH > 0) {
-                const fitScale = hasRing
-                    ? Math.min((w * ringScaleFactor * subjectScale) / texW, (h * ringScaleFactor * subjectScale) / texH)
-                    : Math.min(w / texW, h / texH) * imgScale;
-                const safeScale = (Number.isFinite(fitScale) && fitScale > 0) ? fitScale : 1;
-                sprite.scale.set(safeScale * mirrorX, safeScale * mirrorY);
-                sprite.visible = true;
-            } else {
-                // Texture might still be uploading; never assign sprite.width directly when dimensions are 0 (prevents Infinity/NaN crash)
-                sprite.scale.set(1 * mirrorX, 1 * mirrorY);
-                sprite.visible = false;
+                // Never assign sprite.width while the texture has no size yet (Infinity/NaN scale)
                 const applyDimensions = () => {
-                    if (sprite && !sprite.destroyed) {
-                        const nw = texture.orig?.width || texture.width || 0;
-                        const nh = texture.orig?.height || texture.height || 0;
-                        if (Number.isFinite(nw) && nw > 0 && Number.isFinite(nh) && nh > 0) {
-                            const fitScale = hasRing
-                                ? Math.min((w * ringScaleFactor * subjectScale) / nw, (h * ringScaleFactor * subjectScale) / nh)
-                                : Math.min(w / nw, h / nh) * imgScale;
-                            const safeScale = (Number.isFinite(fitScale) && fitScale > 0) ? fitScale : 1;
-                            sprite.scale.set(safeScale * mirrorX, safeScale * mirrorY);
-                            sprite.visible = true;
-                        }
-                    }
+                    if (!sprite || sprite.destroyed) return false;
+                    const texW = texture.orig?.width || texture.width || 0;
+                    const texH = texture.orig?.height || texture.height || 0;
+                    if (!(texW > 0 && texH > 0)) return false;
+                    const fitScale = Math.min(w / texW, h / texH) * imgScale;
+                    const safeScale = (Number.isFinite(fitScale) && fitScale > 0) ? fitScale : 1;
+                    sprite.scale.set(safeScale * mirrorX, safeScale * mirrorY);
+                    sprite.visible = true;
+                    return true;
                 };
-                if (texture.baseTexture?.valid) {
-                    applyDimensions();
-                } else {
+                if (!applyDimensions()) {
+                    sprite.visible = false;
                     texture.baseTexture?.once?.("loaded", applyDimensions);
                     texture.once?.("update", applyDimensions);
                 }
+                sprite.alpha = customImg ? 1.0 : (sourceToken.document?.alpha ?? 1.0);
+                if (!customImg && !sourceToken.document?.lockRotation && sourceToken.document?.rotation) {
+                    sprite.angle = sourceToken.document.rotation;
+                }
+                container.addChild(sprite);
             }
-            sprite.alpha = customImg ? 1.0 : (sourceToken.document?.alpha ?? 1.0);
-
-            // Match token facing angle if rotation is unlocked
-            if (!customImg && !sourceToken.document?.lockRotation && sourceToken.document?.rotation) {
-                sprite.angle = sourceToken.document.rotation;
-            }
-
-            // Subject artwork renders on top of the metallic ring so horns/features burst out
-            container.addChild(sprite);
         }
 
-        // 3. Grid target footprint indicator & collision status
+        // Grid target footprint indicator & collision status
         const indicator = new PIXI.Graphics();
         container.addChild(indicator);
 
-        return { container, sprite, indicator, bkgGraphics, bkgSprite, ringGraphics, ringSprite, colorBandGraphics };
+        return { container, clone, sprite, indicator };
     } catch (err) {
         console.error(`Nik's Foundry Tweaks | Failed to create ghost token preview: ${err?.message || err}`);
         ui.notifications?.error(`Preview creation error: ${err.message}`);
@@ -1006,6 +872,7 @@ function updateGhostAndHud(mousePos) {
     if (ghost?.container) {
         ghost.container.visible = true;
         ghost.container.position.set(topLeft.x, topLeft.y);
+        if (ghost.clone) updateGhostClone(ghost.clone, { topLeft });
     }
 
     // Measure distance using grid measurement with fallback
@@ -1036,48 +903,29 @@ function updateGhostAndHud(mousePos) {
 }
 
 /**
- * Draws PIXI graphics indicator on the ghost token preview.
+ * Draws PIXI graphics indicator on the ghost token preview and tints the token art by destination state.
+ * The ghost clone's art renders in the primary canvas group, below the indicator in the controls layer, so the valid
+ * state's fill is kept faint there to leave the token's colors (and its ring's) readable.
  */
 function updateGhostVisuals(ghost, { isValid, inRange, isBlocked, sourceToken }) {
     if (!ghost) return;
-    const { sprite, indicator, bkgGraphics, ringGraphics, ringSprite, colorBandGraphics } = ghost;
+    const { clone, sprite, indicator } = ghost;
     if (!indicator) return;
 
     indicator.clear();
     const w = sourceToken.w || canvas.grid?.size || 100;
     const h = sourceToken.h || canvas.grid?.size || 100;
+    const tint = isValid ? GHOST_TINTS.valid : (!inRange ? GHOST_TINTS.outOfRange : GHOST_TINTS.blocked);
+    if (sprite) sprite.tint = tint;
+    if (clone) updateGhostClone(clone, { tint });
 
     if (isValid) {
-        if (sprite) sprite.tint = 0xffffff;
-        if (ringSprite) {
-            ringSprite.tint = 0xffffff; // Preserves authentic bronze/steel metallic highlights
-            ringSprite.alpha = 1;
-        }
-        if (colorBandGraphics) {
-            colorBandGraphics.tint = 0xffffff;
-            colorBandGraphics.alpha = 1;
-        }
-        if (ringGraphics) ringGraphics.alpha = 1;
-        if (bkgGraphics) bkgGraphics.alpha = 1;
-
         // Arcane cyan glowing frame & soft fill
         indicator.lineStyle(3, 0x00ffee, 0.9);
-        indicator.beginFill(0x00c8bb, 0.18);
+        indicator.beginFill(0x00c8bb, clone ? 0.06 : 0.18);
         indicator.drawRoundedRect(0, 0, w, h, 6);
         indicator.endFill();
     } else if (!inRange) {
-        if (sprite) sprite.tint = 0xff7777;
-        if (ringSprite) {
-            ringSprite.tint = 0xff8888;
-            ringSprite.alpha = 0.8;
-        }
-        if (colorBandGraphics) {
-            colorBandGraphics.tint = 0xff6666;
-            colorBandGraphics.alpha = 0.8;
-        }
-        if (ringGraphics) ringGraphics.alpha = 0.6;
-        if (bkgGraphics) bkgGraphics.alpha = 0.5;
-
         // Red out-of-range frame with diagonal slash
         indicator.lineStyle(3, 0xff3344, 0.9);
         indicator.beginFill(0xcc1122, 0.25);
@@ -1088,18 +936,6 @@ function updateGhostVisuals(ghost, { isValid, inRange, isBlocked, sourceToken })
         indicator.moveTo(w * 0.2, h * 0.2);
         indicator.lineTo(w * 0.8, h * 0.8);
     } else if (isBlocked) {
-        if (sprite) sprite.tint = 0xff9955;
-        if (ringSprite) {
-            ringSprite.tint = 0xffaa77;
-            ringSprite.alpha = 0.8;
-        }
-        if (colorBandGraphics) {
-            colorBandGraphics.tint = 0xff8844;
-            colorBandGraphics.alpha = 0.8;
-        }
-        if (ringGraphics) ringGraphics.alpha = 0.6;
-        if (bkgGraphics) bkgGraphics.alpha = 0.5;
-
         // Orange blocked frame with X mark
         indicator.lineStyle(3, 0xff6600, 0.9);
         indicator.beginFill(0xbb4400, 0.25);
@@ -1248,6 +1084,15 @@ function cleanupSession(isCancel = false) {
     if (hud?.parentNode) {
         hud.classList.add("nft-teleport-fade-out");
         setTimeout(() => hud.remove(), 220);
+    }
+
+    // Destroy the ghost token clone (also removes its mesh from the primary group and the source token's preview link)
+    if (ghost?.clone && !ghost.clone.destroyed) {
+        try {
+            ghost.clone.destroy({ children: true });
+        } catch (err) {
+            console.warn(`Nik's Foundry Tweaks | Failed to destroy ghost token clone: ${err?.message || err}`);
+        }
     }
 
     // Destroy ghost token preview container safely

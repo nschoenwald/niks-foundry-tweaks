@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.14.1] - 2026-11-18
+### Fixed
+- **Enhanced Teleport Targeting UI**: The ghost token preview now looks exactly like the token on the canvas with Dynamic Token Rings: the right ring colors, background and subject image, at the right size. It is drawn the same way as Foundry's preview when you drag a token.
+
 ## [14.14.0] - 2026-11-18
 ### Changed
 - **File Picker Thumbnails**: The thumbnail storage is now limited by size instead of count. Each player sets the limit under Personal Preferences (*Thumbnail Storage Limit*, default 1,024 MB). When it is full, the thumbnails you haven't seen for the longest time are deleted.

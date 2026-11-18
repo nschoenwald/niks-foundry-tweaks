@@ -154,7 +154,7 @@ Prevents tokens with negative elevation from disappearing behind the scene backg
 
 ### Enhanced Teleport Targeting UI (Automated Animations, BLFX)
 Improves teleport destination picking (*Misty Step*, *Dimension Door*) for Automated Animations teleport presets and Boss Loot FX (BLFX) teleports:
-* Snaps a translucent ghost token preview to the grid featuring the character's authentic dynamic token ring and rune colors.
+* Snaps a translucent ghost token preview to the grid. It is drawn by Foundry like its drag preview, so it looks exactly like the token: Dynamic Token Ring with its colors, background, subject image and scale, plus mirroring and rotation.
 * Real-time status badges for valid range, out-of-range, and wall collision.
 * The range border follows the scene's grid rules: a square on square grids where every diagonal counts as 5 ft., a circle on other grids (overrides the preset's Circle / Square option). BLFX teleports and D&D 5e's Teleport activity (via Nik's DnD5e Tweaks) get their own border when the range is known: cyan, red while the destination is out of range, shaped by the grid's diagonal rule (square, octagon, hexagon or circle).
 * Uninterrupted right-click canvas panning and clean <kbd>ESC</kbd> / Cancel flow.
@@ -253,7 +253,7 @@ Hooks.once("niksTweaks.register", (api) => {
 
 * **libWrapper**: All method and property overrides register cooperatively via `libWrapper` when installed, with a standalone fallback otherwise.
 * **Carolingian UI**: Automatic color theme adoption for the dashboard and canvas banners, and top navigation clearance.
-* **Automated Animations**: Ghost token preview with dynamic token rings for teleport presets.
+* **Automated Animations**: Ghost token preview (Dynamic Token Rings included) for teleport presets.
 * **Boss Loot FX (BLFX)**: The same teleport banner and ghost preview replace BLFX's destination crosshair.
 * **Nik's DnD5e Tweaks**: Requires this module from 14.70.0 on and adds its settings to the dashboard. With an older Nik's DnD5e Tweaks active, this module stays inactive (and tells the GM to update), so no feature runs twice.
 
