@@ -17,5 +17,7 @@
   "NFT.FolderCopyMove.CopyButton": "Kopieren",
   "NFT.FolderCopyMove.MoveButton": "Verschieben",
   "NFT.FolderCopyMove.Copied": "{name} nach {folder} kopiert.",
-  "NFT.FolderCopyMove.Moved": "{name} nach {folder} verschoben."
+  "NFT.FolderCopyMove.Moved": "{name} nach {folder} verschoben.",
+
+  "NFT.CompactFilePicker.SmallTiles": "Kleine Kacheln"
 }

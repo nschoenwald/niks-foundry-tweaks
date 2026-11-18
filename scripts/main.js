@@ -32,6 +32,7 @@ import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-
 // Utilities and patches
 import { initAutoUnpauseOnLogin } from "./features/utilities/auto-unpause-on-login.js";
 import { initFolderCopyMove } from "./features/ui-visuals/folder-copy-move.js";
+import { initCompactFilePicker, STATE_SETTING as COMPACT_FILE_PICKER_STATE } from "./features/ui-visuals/compact-file-picker.js";
 import { initDelayedDisconnectWarning } from "./features/utilities/delayed-disconnect-warning.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
@@ -155,6 +156,24 @@ Hooks.once("init", () => {
         type: Boolean,
         default: true,
         onChange: () => updateClearSceneToggles()
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableCompactFilePicker", {
+        name: "Compact File Picker (Personal)",
+        hint: "Uses the compact, resizable file picker (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => initCompactFilePicker()
+    });
+
+    // Size and display mode of the compact file picker, remembered between sessions
+    game.settings.register(MODULE_ID, COMPACT_FILE_PICKER_STATE, {
+        scope: "client",
+        config: false,
+        type: Object,
+        default: {}
     });
 
     game.settings.register(MODULE_ID, "clientEnableFolderCopyMove", {
@@ -370,6 +389,17 @@ Hooks.once("init", () => {
         default: true,
         restricted: true,
         onChange: () => updateClearSceneToggles()
+    });
+
+    game.settings.register(MODULE_ID, "enableCompactFilePicker", {
+        name: "Compact File Picker",
+        hint: "Makes the file picker resizable and less tall, and adds a small tiles view.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+        restricted: true,
+        onChange: () => initCompactFilePicker()
     });
 
     game.settings.register(MODULE_ID, "enableFolderCopyMove", {
@@ -592,6 +622,7 @@ Hooks.once("setup", () => {
     initAutoUnpauseOnLogin();
     initDelayedDisconnectWarning();
     initFolderCopyMove();
+    initCompactFilePicker();
     initFixTokenBarRefresh();
     initFixPlaceablesSidebarTab();
     initFixMacBatchBuffer();

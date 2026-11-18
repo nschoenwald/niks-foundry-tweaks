@@ -45,6 +45,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Actor Directory Disposition Dots](#actor-directory-disposition-dots)** | UI & Visuals | ✅ Enabled | No |
 | **[Sidebar Multi-line Names](#sidebar-multi-line-names)** | UI & Visuals | ✅ Enabled | No |
 | **[Copy & Move to Folder](#copy--move-to-folder)** | UI & Visuals | ✅ Enabled | Yes |
+| **[Compact File Picker](#compact-file-picker)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Sync Browser Tab Title](#sync-browser-tab-title)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Toolbar Limitation](#toolbar-limitation)** | UI & Visuals | ✅ Enabled | Yes |
 | **[Clearer Scene Control Toggles](#clearer-scene-control-toggles)** | UI & Visuals | ✅ Enabled | Yes |
@@ -101,6 +102,17 @@ Adds **Copy to Folder…** and **Move to Folder…** to the right-click menu of 
 - **Move** puts the document into the chosen folder. Its current folder is marked and can't be picked.
 - **Copy** creates a copy in the chosen folder, like Duplicate. In another folder the copy keeps its name; in the same folder it is called "Copy of …".
 - Players see the entries for documents they own (Copy also needs permission to create that kind of document). In compendiums, only the GM sees them, and only while the compendium is unlocked. The entries only appear when the directory has folders.
+
+The GM can turn the feature off; players can turn it off for themselves.
+
+### Compact File Picker
+Fits more files into Foundry's file picker (the Image Browser and the other file and folder pickers):
+
+- **Resizable.** Drag the bottom-right corner. The picker opens at that size from then on, and keeps it while you browse and search instead of shrinking to the folder's content. Tiles fill the extra width with more columns.
+- **Small Tiles view.** A new display mode next to Tiles, with tiles two thirds the size, so about eight fit across the default width instead of five.
+- **Less height spent on controls.** The source tabs show the icon beside the name; the S3 bucket, search field and display mode buttons share one row; upload and selected file share one row, with icons instead of labels.
+- **Favorites fold to one line.** A small arrow after "Favorites" shows that more are hidden; hover over the row (or tab into it) to show all of them.
+- **Remembers your display mode** between sessions, not just until the next reload.
 
 The GM can turn the feature off; players can turn it off for themselves.
 

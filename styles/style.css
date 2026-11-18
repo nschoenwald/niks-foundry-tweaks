@@ -2152,3 +2152,174 @@ body.nft-readable-text .journal-entry-page :is(.journal-page-content, .journal-p
 body.nft-readable-text .journal-entry-page .journal-page-content :is(p, li, dd, dt, blockquote) {
     line-height: var(--nft-rt-line-height);
 }
+
+/* ==========================================================================
+   Compact File Picker - Used by compact-file-picker.js
+   Core's file picker rules live in @layer applications; ours (@layer modules) win without !important.
+   ========================================================================== */
+body.nft-compact-file-picker #file-picker {
+    --nft-fp-gap: 0.5rem;
+    min-width: 400px;
+    min-height: 360px;
+}
+
+body.nft-compact-file-picker #file-picker > .window-content {
+    gap: var(--nft-fp-gap);
+}
+
+/* Tabs: icon beside the label, one slim row (some themes stack them) */
+body.nft-compact-file-picker #file-picker nav.tabs {
+    line-height: 2;
+}
+
+body.nft-compact-file-picker #file-picker nav.tabs [data-tab] {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.4em;
+}
+
+/* Sub-header: path and favorites on full rows; bucket, search and display mode share one row */
+body.nft-compact-file-picker #file-picker .subheader {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: var(--nft-fp-gap);
+}
+
+body.nft-compact-file-picker #file-picker .subheader > .form-group {
+    flex: 1 1 100%;
+    margin: 0;
+}
+
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(select[name="bucket"]) {
+    flex: 0 1 12rem;
+    min-width: 7rem;
+}
+
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(input[name="filter"]) {
+    flex: 1 1 8rem;
+}
+
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(.split-button) {
+    flex: 0 0 auto;
+}
+
+/* Their labels are replaced by the select's value, the search placeholder and the button tooltips */
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(select[name="bucket"]) > label,
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(input[name="filter"]) > label,
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(.split-button) > label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Favorites: one line, the rest unfolds on hover or keyboard focus */
+body.nft-compact-file-picker #file-picker .subheader .nft-favorites {
+    align-items: flex-start;
+}
+
+body.nft-compact-file-picker #file-picker .subheader .nft-favorites > .form-fields {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    max-height: var(--nft-favorites-line, 2rem);
+    overflow: hidden;
+}
+
+body.nft-compact-file-picker #file-picker .subheader .nft-favorites:is(:hover, :focus-within) > .form-fields {
+    max-height: none;
+}
+
+body.nft-compact-file-picker #file-picker .subheader .nft-favorites > .set-favorite {
+    align-self: flex-start;
+    align-items: center;
+    min-height: var(--nft-favorites-line, 2rem);
+}
+
+body.nft-compact-file-picker #file-picker .subheader .nft-favorites-overflow > .set-favorite::after {
+    content: "\f078";
+    font-family: var(--font-awesome);
+    font-weight: 900;
+    font-size: var(--font-size-10);
+    color: var(--color-text-secondary);
+    margin-left: 0.25rem;
+    transition: transform 0.15s;
+}
+
+body.nft-compact-file-picker #file-picker .subheader .nft-favorites-overflow:is(:hover, :focus-within) > .set-favorite::after {
+    transform: rotate(180deg);
+}
+
+/* File list fills the window when it is resized */
+body.nft-compact-file-picker #file-picker .body {
+    flex: 1 1 auto;
+    min-height: 4rem;
+}
+
+/* Tiles: as many columns as fit (5 at the default width), square images */
+body.nft-compact-file-picker #file-picker ul.tiles {
+    --nft-tile-size: 100px;
+    grid-template-columns: repeat(auto-fill, minmax(var(--nft-tile-size), 1fr));
+    border-right: none;
+}
+
+body.nft-compact-file-picker #file-picker ul.tiles li,
+body.nft-compact-file-picker #file-picker ul.tiles li:nth-child(5n) {
+    height: var(--nft-tile-size);
+    border-right: 1px solid var(--color-light-5);
+}
+
+body.nft-compact-file-picker #file-picker ul.tiles li img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Small tiles: two thirds of the regular size */
+body.nft-compact-file-picker #file-picker.nft-compact-tiles ul.tiles {
+    --nft-tile-size: 66px;
+}
+
+body.nft-compact-file-picker #file-picker.nft-compact-tiles ul.tiles li i {
+    margin: 9px auto;
+    font-size: 48px;
+}
+
+/* Images view: the name banner follows the window width */
+body.nft-compact-file-picker #file-picker ul.images li span.filename {
+    left: 50%;
+    width: min(400px, 100%);
+    transform: translateX(-50%);
+}
+
+/* Sub-footer: upload and selected file on one row, icons as labels */
+body.nft-compact-file-picker #file-picker .subfooter {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: var(--nft-fp-gap) 1rem;
+}
+
+body.nft-compact-file-picker #file-picker .subfooter > .form-group {
+    flex: 1 1 14rem;
+    margin: 0;
+    gap: 0.5rem;
+}
+
+body.nft-compact-file-picker #file-picker .subfooter > .form-group.upload-file {
+    flex: 0 1 auto;
+}
+
+body.nft-compact-file-picker #file-picker .subfooter > .form-group > label {
+    flex: none;
+    font-size: 0;
+}
+
+body.nft-compact-file-picker #file-picker .subfooter > .form-group > label > i {
+    font-size: var(--font-size-14);
+}
+
+body.nft-compact-file-picker #file-picker .subfooter input[type="file"] {
+    max-width: 13rem;
+}

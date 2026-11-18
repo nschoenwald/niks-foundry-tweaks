@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.10.0] - 2026-11-18
+### Added
+- **Compact File Picker**: The file picker can be resized and opens at the size you last gave it, keeping that size while you browse. A new Small Tiles view shows tiles at two thirds of the regular size. The controls take less room: tabs, S3 bucket, search and display mode buttons, and upload and selected file each fit on one row, and favorites show one line until you hover over them. Your display mode is remembered between sessions. Players can turn it off for themselves.
+
 ## [14.9.1] - 2026-11-17
 ### Fixed
 - **Enhanced Teleport Targeting UI**: BLFX teleports and D&D 5e's Teleport activity now show a range border around the caster when the range is known (Automated Animations' border is removed when BLFX takes over). It is cyan while the destination is in range and red when it isn't, and follows the grid's diagonal rule: a square for 5/5/5 diagonals, an octagon for 5/10/5, a hexagon on hex grids and a circle on gridless scenes.

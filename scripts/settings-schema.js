@@ -131,6 +131,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "clientEnableCompactFilePicker",
+                            introduced: "14.10.0",
+                            pairedWith: "enableCompactFilePicker",
+                            name: "Compact File Picker",
+                            hint: "Uses the compact, resizable file picker with the small tiles view on your screen (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
                             key: "clientEnableFolderCopyMove",
                             introduced: "14.4.0",
                             pairedWith: "enableFolderCopyMove",
@@ -260,6 +270,17 @@ export function getSettingsSchema() {
                             keywords: ["long names", "sidebar"],
                             name: "Sidebar Multi-line Names",
                             hint: "Allows long document names in the right sidebar (Actors, Items, Scenes, etc.) to wrap onto multiple lines instead of being cut off.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
+                        },
+                        {
+                            key: "enableCompactFilePicker",
+                            introduced: "14.10.0",
+                            docs: "compact-file-picker",
+                            keywords: ["file picker", "image browser", "tiles", "favorites", "resize"],
+                            name: "Compact File Picker",
+                            hint: "Makes the file picker resizable (it remembers its size) and less tall: tabs, bucket, search and display mode buttons, and upload and selected file each take one row, and favorites show one line until you hover over them. Adds a Small Tiles view with tiles two thirds the size of the regular ones. Players can turn it off for themselves.",
                             type: "Boolean",
                             default: true,
                             scope: "world"
