@@ -113,6 +113,7 @@ Fits more files into Foundry's file picker (the Image Browser and the other file
 - **Less height spent on controls.** The source tabs show the icon beside the name; the S3 bucket, search field and display mode buttons share one row; upload and selected file share one row, with icons instead of labels.
 - **Favorites fold to one line.** A small arrow after "Favorites" shows that more are hidden; hover over the row (or tab into it) to show all of them.
 - **Remembers your display mode** between sessions, not just until the next reload.
+- **Clearer highlight** of the current or picked file in the tile views.
 
 The GM can turn the feature off; players can turn it off for themselves.
 
@@ -175,6 +176,7 @@ Enables diagnostic logging in the browser console, for this module and every Nik
 Patches are zero-configuration, always-on fixes for confirmed upstream Foundry bugs:
 * **Token Resource Bar Refresh**: Fixes an upstream Foundry VTT V14 core issue where the first HP change of an unlinked token in a session (e.g. via the Token HUD) did not visually update its resource bar. Only applies to Foundry 14.369 and lower (fixed upstream in 14.370).
 * **Placeables Sidebar Recovery**: Fixes an upstream Foundry VTT V14 core issue where one failed render of the Placeables sidebar's token list (for example caused by another module) pushed the sidebar to the left and broke it until reload, with the console error `Cannot read properties of null (reading 'replaceWith')`. The sidebar now recovers on its next update.
+* **File Picker Current File**: Fixes an upstream Foundry VTT V14 core issue where the file picker never highlighted the file that is currently set when it opens, e.g. a token's current image. The file is now marked (and scrolled into view) until you pick another one. Turns itself off once Foundry fixes it.
 * **macOS Canvas Performance**: Fixes an upstream Foundry VTT V14 / PIXI issue ([#14967](https://github.com/foundryvtt/foundryvtt/issues/14967)) where canvas FPS on Macs dropped steeply as tokens were added to a scene (around 20 FPS at 80 tokens). Only applies on macOS and to Foundry 14.370 and lower (fixed upstream in 14.371); Windows and Linux are unaffected by the bug and left alone.
 
 ---

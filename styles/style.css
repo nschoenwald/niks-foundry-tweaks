@@ -2287,6 +2287,15 @@ body.nft-compact-file-picker #file-picker ul.tiles li img {
     height: 100%;
 }
 
+/* Current / picked file: a clear frame instead of core's faint inset glow */
+body.nft-compact-file-picker #file-picker ul.tiles li.picked {
+    outline: 2px solid var(--color-warm-1);
+    outline-offset: -2px;
+    box-shadow: inset 0 0 10px var(--color-warm-1);
+    position: relative;
+    z-index: 1;
+}
+
 /* Small tiles: two thirds of the regular size */
 body.nft-compact-file-picker #file-picker.nft-compact-tiles ul.tiles {
     --nft-tile-size: 66px;

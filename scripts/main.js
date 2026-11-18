@@ -36,6 +36,7 @@ import { initCompactFilePicker, STATE_SETTING as COMPACT_FILE_PICKER_STATE } fro
 import { initDelayedDisconnectWarning } from "./features/utilities/delayed-disconnect-warning.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
+import { initFixFilePickerCurrentFile } from "./features/patches/fix-file-picker-current-file.js";
 import { initFixMacBatchBuffer } from "./features/patches/fix-mac-batch-buffer.js";
 
 // Dashboard, API, migration
@@ -625,6 +626,7 @@ Hooks.once("setup", () => {
     initCompactFilePicker();
     initFixTokenBarRefresh();
     initFixPlaceablesSidebarTab();
+    initFixFilePickerCurrentFile();
     initFixMacBatchBuffer();
 });
 

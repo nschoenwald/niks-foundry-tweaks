@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.11.0] - 2026-11-18
+### Added
+- **Compact File Picker**: The current or picked file gets a clearer frame in the tile views.
+
+### Fixed
+- **File Picker Current File** (core patch): When you open the file picker, e.g. for a token's image, the current image is highlighted and scrolled into view until you pick another one. Foundry tried to do this but never found the file.
+
 ## [14.10.1] - 2026-11-18
 ### Fixed
 - **Compact File Picker**: The source tabs line up with the rows below instead of sticking out to the left, and the upload and selected file icons sit next to their fields. The S3 bucket list is only as wide as the bucket name, leaving more room for the search field.
