@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.12.1] - 2026-11-18
+### Fixed
+- **File Picker Current File** (core patch): The picker now also scrolls to the current file in the Small Tiles view, and puts it in the middle of the list instead of at the edge.
+
 ## [14.12.0] - 2026-11-18
 ### Changed
 - **Compact File Picker**: The S3 bucket list is hidden when only one bucket is available, since there is nothing to choose. The search field gets the whole row.

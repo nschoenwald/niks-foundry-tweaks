@@ -4,6 +4,7 @@
  * set (e.g. a token's image) when it opens.
  *
  * @introduced v14.11.0
+ * @updated v14.12.1 (Scroll after the layout settles, centered; was off with Compact File Picker's small tiles)
  */
 import { log } from "../../context.js";
 import { patchMethod } from "../../utils/patch-helper.js";
@@ -17,8 +18,9 @@ import { patchMethod } from "../../utils/patch-helper.js";
  * `/` into `%2F`. Any file in a folder therefore never matches, and nothing is highlighted.
  *
  * After core's `_onRender`, this marks the row whose path matches the file in the "Selected" field (the file the
- * picker was opened with, or the one picked since), comparing URI-decoded paths, and scrolls it into view the first
- * time it shows up in a folder. Clicking another file moves the mark as before (core's `#onPickFile`).
+ * picker was opened with, or the one picked since), comparing URI-decoded paths, and scrolls it to the middle of the
+ * list the first time it shows up in a folder (one frame later, once other wrappers have finished changing the
+ * layout). Clicking another file moves the mark as before (core's `#onPickFile`).
  *
  * Steps aside when core already marked a row, so it turns itself off once fixed upstream.
  * Not fixed upstream as of Foundry 14.370. Add a FIXED_IN_VERSION gate once it is.
@@ -72,5 +74,8 @@ function markCurrentFile(app) {
     const key = `${app.activeSource}:${app.source?.target}`;
     if (app._nftScrolledToPick === key) return;
     app._nftScrolledToPick = key;
-    row.scrollIntoView({ block: "nearest" });
+    // Wait a frame: later _onRender wrappers may still change the layout (Compact File Picker's small tiles class)
+    requestAnimationFrame(() => {
+        if (row.isConnected) row.scrollIntoView({ block: "center" });
+    });
 }
