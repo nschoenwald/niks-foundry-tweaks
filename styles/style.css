@@ -2200,6 +2200,11 @@ body.nft-compact-file-picker #file-picker .subheader > .form-group:has(select[na
     min-width: 0;
 }
 
+/* Only one bucket: nothing to choose, so no select (the S3 tab still names the source) */
+body.nft-compact-file-picker #file-picker .subheader > .form-group:has(select[name="bucket"]):not(:has(option + option)) {
+    display: none;
+}
+
 /* The bucket select is as wide as the bucket name, leaving the room to the search field */
 body.nft-compact-file-picker #file-picker .subheader select[name="bucket"] {
     field-sizing: content;

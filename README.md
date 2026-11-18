@@ -110,7 +110,7 @@ Fits more files into Foundry's file picker (the Image Browser and the other file
 
 - **Resizable.** Drag the bottom-right corner. The picker opens at that size from then on, and keeps it while you browse and search instead of shrinking to the folder's content. Tiles fill the extra width with more columns.
 - **Small Tiles view.** A new display mode next to Tiles, with tiles two thirds the size, so about eight fit across the default width instead of five.
-- **Less height spent on controls.** The source tabs show the icon beside the name; the S3 bucket, search field and display mode buttons share one row; upload and selected file share one row, with icons instead of labels.
+- **Less height spent on controls.** The source tabs show the icon beside the name; the S3 bucket, search field and display mode buttons share one row (the bucket list is hidden when the world has only one bucket); upload and selected file share one row, with icons instead of labels.
 - **Favorites fold to one line.** A small arrow after "Favorites" shows that more are hidden; hover over the row (or tab into it) to show all of them.
 - **Remembers your display mode** between sessions, not just until the next reload.
 - **Clearer highlight** of the current or picked file in the tile views.

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.12.0] - 2026-11-18
+### Changed
+- **Compact File Picker**: The S3 bucket list is hidden when only one bucket is available, since there is nothing to choose. The search field gets the whole row.
+
 ## [14.11.0] - 2026-11-18
 ### Added
 - **Compact File Picker**: The current or picked file gets a clearer frame in the tile views.
