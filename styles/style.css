@@ -2350,11 +2350,14 @@ body.nft-compact-file-picker #file-picker .subfooter > .form-group > label {
 body.nft-compact-file-picker #file-picker .subfooter > .form-group > .form-fields {
     flex: 1 1 0 !important;
     min-width: 0;
+    justify-content: flex-start !important;
 }
 
+/* !important: themes such as Carolingian UI (unlayered) size form inputs themselves */
 body.nft-compact-file-picker #file-picker .subfooter input[name="file"] {
-    flex: 1 1 auto;
-    width: 100%;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
 }
 
 body.nft-compact-file-picker #file-picker .subfooter > .form-group > label > i {

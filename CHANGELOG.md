@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.12.2] - 2026-11-18
+### Fixed
+- **Compact File Picker**: The selected file field at the bottom uses all of the room next to the upload button again (it stayed narrow with some UI themes, such as Carolingian UI).
+
 ## [14.12.1] - 2026-11-18
 ### Fixed
 - **File Picker Current File** (core patch): The picker now also scrolls to the current file in the Small Tiles view, and puts it in the middle of the list instead of at the edge.
