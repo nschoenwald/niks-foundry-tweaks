@@ -125,7 +125,7 @@ Foundry's file picker shows every image at full size and lets the browser shrink
 
 - The first time an image appears, your browser downloads it once, shrinks it to a small thumbnail (256 px on the longest side) and keeps it in its own storage. From then on the picker shows the stored thumbnail: no download, almost nothing to decode, so folders open and scroll quickly.
 - Images load as they scroll into view, a few at a time. The large Images view, SVG icons and animated GIFs still use the original files.
-- Thumbnails are kept per browser, up to 4,000 of them (the least recently used are removed first), and are made again after 30 days. If you replace an image under the same name, choose **Refresh Thumbnails** in the picker's ⋮ menu to update the current folder right away.
+- Thumbnails are kept per browser, up to the **Thumbnail Storage Limit** under Personal Preferences (default 1,024 MB, roughly 50,000 to 100,000 thumbnails). When it is full, the thumbnails you haven't seen for the longest time are removed first. Thumbnails are also made again after 30 days. If you replace an image under the same name, choose **Refresh Thumbnails** in the picker's ⋮ menu to update the current folder right away.
 - Works with User Data, Core Data and Amazon S3. For S3, the bucket must allow cross-origin requests, which Foundry already needs for S3 images on the canvas. If a thumbnail can't be made, the picker shows the original image.
 
 The GM can turn the feature off; players can turn it off for themselves.

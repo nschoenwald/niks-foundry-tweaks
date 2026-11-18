@@ -4,8 +4,9 @@
  * views. Each image is downloaded and shrunk once per browser, then served from the browser's own storage.
  *
  * @introduced v14.13.0
+ * @updated v14.14.0 (Storage limit in MB, personal setting, instead of 4000 entries)
  */
-import { MODULE_ID, debug, isFeatureActive } from "../../context.js";
+import { MODULE_ID, debug, getSetting, isFeatureActive } from "../../context.js";
 import { patchMethod } from "../../utils/patch-helper.js";
 
 /** Longest side of a thumbnail in pixels (2× the 100px tiles, for high-DPI screens). */
@@ -17,8 +18,9 @@ const THUMB_QUALITY = 0.8;
 
 /** Thumbnails older than this are made again, so replaced files show up eventually. */
 const MAX_AGE = 30 * 24 * 60 * 60 * 1000;
-/** Oldest-used thumbnails beyond this many are deleted. */
-const MAX_ENTRIES = 4000;
+/** Client setting with the storage limit in MB; the least recently used thumbnails beyond it are deleted. */
+export const MAX_MB_SETTING = "filePickerThumbnailsMaxMB";
+const DEFAULT_MAX_MB = 1024;
 /** "used" is only rewritten when older than this, to keep reads cheap. */
 const TOUCH_INTERVAL = 24 * 60 * 60 * 1000;
 /** Full-size downloads running at once. */
@@ -342,7 +344,7 @@ async function _dbPut(url, { blob, width, height }) {
     try {
         const now = Date.now();
         const tx = db.transaction(STORE, "readwrite");
-        tx.objectStore(STORE).put({ blob, width, height, created: now, used: now }, url);
+        tx.objectStore(STORE).put({ blob, width, height, size: blob.size, created: now, used: now }, url);
         await _complete(tx);
         _schedulePrune();
     } catch (err) {
@@ -370,27 +372,53 @@ let _pruneTimer = null;
 
 function _schedulePrune() {
     clearTimeout(_pruneTimer);
-    _pruneTimer = setTimeout(_prune, 10000);
+    _pruneTimer = setTimeout(prune, 10000);
 }
 
-/** Delete the least recently used thumbnails beyond MAX_ENTRIES. */
-async function _prune() {
+/** @returns {number} Storage limit in bytes */
+function _maxBytes() {
+    let mb = DEFAULT_MAX_MB;
+    try {
+        mb = Number(getSetting(MAX_MB_SETTING));
+    } catch {
+        // Not registered yet
+    }
+    if (!Number.isFinite(mb) || mb <= 0) mb = DEFAULT_MAX_MB;
+    return mb * 1024 * 1024;
+}
+
+/**
+ * Keep the most recently used thumbnails up to the storage limit and delete the rest.
+ * Also called when the limit setting changes.
+ */
+export async function prune() {
     const db = await _db();
     if (!db) return;
+    const limit = _maxBytes();
     try {
-        const count = await _done(db.transaction(STORE).objectStore(STORE).count());
-        let excess = count - MAX_ENTRIES;
-        if (excess <= 0) return;
+        let kept = 0;
+        let deleted = 0;
+        let freed = 0;
+        let full = false;
         const tx = db.transaction(STORE, "readwrite");
-        const request = tx.objectStore(STORE).index("used").openCursor();
+        // Newest first: add up sizes, delete everything once the limit is reached
+        const request = tx.objectStore(STORE).index("used").openCursor(null, "prev");
         request.onsuccess = () => {
             const cursor = request.result;
-            if (!cursor || excess-- <= 0) return;
-            cursor.delete();
+            if (!cursor) return;
+            const size = cursor.value.size ?? cursor.value.blob?.size ?? 0;
+            if (!full && kept + size <= limit) {
+                kept += size;
+            } else {
+                full = true;
+                cursor.delete();
+                deleted++;
+                freed += size;
+            }
             cursor.continue();
         };
         await _complete(tx);
-        debug(`File Picker Thumbnails: pruned ${count - MAX_ENTRIES} thumbnails`);
+        if (deleted) debug(`File Picker Thumbnails: deleted ${deleted} thumbnails (${(freed / 1048576).toFixed(1)} MB), keeping ${(kept / 1048576).toFixed(1)} MB`);
     } catch (err) {
         debug("File Picker Thumbnails: pruning failed", err);
     }

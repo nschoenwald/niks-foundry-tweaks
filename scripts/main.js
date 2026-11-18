@@ -33,7 +33,7 @@ import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-
 import { initAutoUnpauseOnLogin } from "./features/utilities/auto-unpause-on-login.js";
 import { initFolderCopyMove } from "./features/ui-visuals/folder-copy-move.js";
 import { initCompactFilePicker, STATE_SETTING as COMPACT_FILE_PICKER_STATE } from "./features/ui-visuals/compact-file-picker.js";
-import { initFilePickerThumbnails } from "./features/ui-visuals/file-picker-thumbnails.js";
+import { initFilePickerThumbnails, prune as pruneFilePickerThumbnails, MAX_MB_SETTING as FILE_PICKER_THUMBNAILS_MAX_MB } from "./features/ui-visuals/file-picker-thumbnails.js";
 import { initDelayedDisconnectWarning } from "./features/utilities/delayed-disconnect-warning.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
@@ -178,6 +178,16 @@ Hooks.once("init", () => {
         type: Boolean,
         default: true,
         onChange: () => initFilePickerThumbnails()
+    });
+
+    game.settings.register(MODULE_ID, FILE_PICKER_THUMBNAILS_MAX_MB, {
+        name: "↳ Thumbnail Storage Limit (MB)",
+        hint: "How much space file picker thumbnails may take in this browser. The least recently used are deleted beyond it.",
+        scope: "client",
+        config: false,
+        type: Number,
+        default: 1024,
+        onChange: () => pruneFilePickerThumbnails()
     });
 
     // Size and display mode of the compact file picker, remembered between sessions

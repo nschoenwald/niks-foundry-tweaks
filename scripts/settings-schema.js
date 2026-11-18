@@ -141,6 +141,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "filePickerThumbnailsMaxMB",
+                            introduced: "14.14.0",
+                            name: "Thumbnail Storage Limit (MB)",
+                            hint: "How much space file picker thumbnails may take in this browser (default 1024 MB, about 50,000 to 100,000 thumbnails). When it is full, the thumbnails you haven't seen for the longest time are deleted and made again when needed.",
+                            type: "Number",
+                            default: 1024,
+                            scope: "client",
+                            parentKey: "clientEnableFilePickerThumbnails"
+                        },
+                        {
                             key: "clientEnableCompactFilePicker",
                             introduced: "14.10.0",
                             pairedWith: "enableCompactFilePicker",
@@ -290,7 +300,7 @@ export function getSettingsSchema() {
                             docs: "file-picker-thumbnails",
                             keywords: ["file picker", "image browser", "thumbnails", "performance", "s3"],
                             name: "File Picker Thumbnails",
-                            hint: "The file picker's tile and thumbnail views show small thumbnails instead of scaling down the full-size images. Each browser downloads an image once, shrinks it and keeps the thumbnail, so folders with many large images open and scroll much faster the next time. \"Refresh Thumbnails\" in the picker's ⋮ menu remakes them for the current folder. Players can turn it off for themselves.",
+                            hint: "The file picker's tile and thumbnail views show small thumbnails instead of scaling down the full-size images. Each browser downloads an image once, shrinks it and keeps the thumbnail, so folders with many large images open and scroll much faster the next time. Each player sets how much space they may take under Personal Preferences. \"Refresh Thumbnails\" in the picker's ⋮ menu remakes them for the current folder. Players can turn it off for themselves.",
                             type: "Boolean",
                             default: true,
                             scope: "world"

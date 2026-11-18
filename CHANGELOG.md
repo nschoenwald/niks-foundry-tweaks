@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.14.0] - 2026-11-18
+### Changed
+- **File Picker Thumbnails**: The thumbnail storage is now limited by size instead of count. Each player sets the limit under Personal Preferences (*Thumbnail Storage Limit*, default 1,024 MB). When it is full, the thumbnails you haven't seen for the longest time are deleted.
+
 ## [14.13.0] - 2026-11-18
 ### Added
 - **File Picker Thumbnails**: The file picker's Tiles, Small Tiles and Thumbnails views show small thumbnails instead of the full-size images. Your browser downloads each image once, shrinks it and keeps the thumbnail, so folders with many large images open and scroll much faster from the second visit on. Images load as they scroll into view. "Refresh Thumbnails" in the picker's ⋮ menu remakes them for the current folder after you replace a file. Works with User Data, Core Data and Amazon S3. Players can turn it off for themselves.
