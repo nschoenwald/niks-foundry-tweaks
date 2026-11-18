@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.14.2] - 2026-11-18
+### Fixed
+- **Compact File Picker**: The selected file field at the bottom now really uses all of the room next to its icon. With some UI themes, such as Carolingian UI, the icon still kept empty space beside it.
+
 ## [14.14.1] - 2026-11-18
 ### Fixed
 - **Enhanced Teleport Targeting UI**: The ghost token preview now looks exactly like the token on the canvas with Dynamic Token Rings: the right ring colors, background and subject image, at the right size. It is drawn the same way as Foundry's preview when you drag a token.
