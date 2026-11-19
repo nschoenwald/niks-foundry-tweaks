@@ -569,6 +569,17 @@ export function getSettingsSchema() {
                             type: "Boolean",
                             default: true,
                             scope: "world"
+                        },
+                        {
+                            key: "enableReconnectResync",
+                            introduced: "14.15.0",
+                            docs: "resync-prompt-after-short-disconnects",
+                            keywords: ["connection", "disconnect", "reconnect", "sync", "desync", "out of sync", "reload", "refresh", "chat"],
+                            name: "Resync Prompt After Short Disconnects",
+                            hint: "When someone's connection drops for less than 5 seconds, Foundry reconnects without reloading, and changes made by others in the meantime (such as an effect being added or removed) never reach them. This whispers a chat message to that user and the GMs, with a Reload button for the user. GMs see who dropped and whether they have reloaded.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
                         }
                     ]
                 },

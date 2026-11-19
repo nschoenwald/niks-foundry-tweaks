@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.15.0] - 2026-11-19
+### Added
+- **Resync Prompt After Short Disconnects**: When someone's connection drops for less than 5 seconds, Foundry reconnects without reloading, so changes made in the meantime (such as an effect being added or removed) never reach them and their game quietly gets out of sync. The user and the GMs now get a whispered chat message about it, with a Reload button for the user. GMs see who dropped and whether they have reloaded. On by default.
+
 ## [14.14.2] - 2026-11-18
 ### Fixed
 - **Compact File Picker**: The selected file field at the bottom now really uses all of the room next to its icon. With some UI themes, such as Carolingian UI, the icon still kept empty space beside it.

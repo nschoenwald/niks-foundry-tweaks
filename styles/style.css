@@ -2370,3 +2370,23 @@ body.nft-compact-file-picker #file-picker .subfooter > .form-group > label > i {
 body.nft-compact-file-picker #file-picker .subfooter input[type="file"] {
     max-width: 13rem;
 }
+
+/* ==========================================
+   Resync Prompt After Short Disconnects (chat message)
+   Colors are inherited from the chat card, so every core and system theme applies.
+   ========================================== */
+
+.nft-reconnect-resync p {
+    margin: 0 0 0.375rem;
+}
+
+.nft-reconnect-resync .nft-reconnect-resync-count,
+.nft-reconnect-resync .nft-reconnect-resync-status {
+    opacity: 0.8;
+    font-style: italic;
+}
+
+.nft-reconnect-resync button {
+    width: 100%;
+    margin-top: 0.125rem;
+}

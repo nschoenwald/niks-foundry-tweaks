@@ -20,5 +20,15 @@
   "NFT.FolderCopyMove.Moved": "{name} nach {folder} verschoben.",
 
   "NFT.CompactFilePicker.SmallTiles": "Kleine Kacheln",
-  "NFT.FilePickerThumbnails.Refresh": "Vorschaubilder neu erstellen"
+  "NFT.FilePickerThumbnails.Refresh": "Vorschaubilder neu erstellen",
+
+  "NFT.ReconnectResync.Speaker": "Verbindung",
+  "NFT.ReconnectResync.BodySelf": "Deine Verbindung war {seconds} s unterbrochen. Änderungen aus dieser Zeit (z. B. hinzugefügte oder entfernte Effekte) sind eventuell nicht bei dir angekommen. Lade neu, um sicher den aktuellen Stand zu sehen.",
+  "NFT.ReconnectResync.Body": "Die Verbindung von {name} war {seconds} s unterbrochen. Änderungen aus dieser Zeit (z. B. hinzugefügte oder entfernte Effekte) erreichen {name} eventuell erst nach dem Neuladen.",
+  "NFT.ReconnectResync.Count": "Bisher {count}-mal unterbrochen.",
+  "NFT.ReconnectResync.Button": "Neu laden",
+  "NFT.ReconnectResync.Waiting": "Warte darauf, dass {name} neu lädt.",
+  "NFT.ReconnectResync.Reloaded": "{name} hat neu geladen.",
+  "NFT.ReconnectResync.ReloadedSelf": "Du hast neu geladen.",
+  "NFT.ReconnectResync.UnknownUser": "Ein Benutzer"
 }

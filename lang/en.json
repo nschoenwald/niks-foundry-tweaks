@@ -20,5 +20,15 @@
   "NFT.FolderCopyMove.Moved": "Moved {name} to {folder}.",
 
   "NFT.CompactFilePicker.SmallTiles": "Small Tiles",
-  "NFT.FilePickerThumbnails.Refresh": "Refresh Thumbnails"
+  "NFT.FilePickerThumbnails.Refresh": "Refresh Thumbnails",
+
+  "NFT.ReconnectResync.Speaker": "Connection",
+  "NFT.ReconnectResync.BodySelf": "Your connection dropped for {seconds} s. Changes made in the meantime (e.g. effects added or removed) may not have reached you. Reload to make sure you see the current state.",
+  "NFT.ReconnectResync.Body": "{name}'s connection dropped for {seconds} s. Changes made in the meantime (e.g. effects added or removed) may not have reached them until they reload.",
+  "NFT.ReconnectResync.Count": "Dropped {count} times so far.",
+  "NFT.ReconnectResync.Button": "Reload",
+  "NFT.ReconnectResync.Waiting": "Waiting for {name} to reload.",
+  "NFT.ReconnectResync.Reloaded": "{name} has reloaded.",
+  "NFT.ReconnectResync.ReloadedSelf": "You have reloaded.",
+  "NFT.ReconnectResync.UnknownUser": "A user"
 }

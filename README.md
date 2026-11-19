@@ -57,6 +57,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Delayed Disconnect Warning](#delayed-disconnect-warning)** | Utilities | ✅ Enabled | Yes |
+| **[Resync Prompt After Short Disconnects](#resync-prompt-after-short-disconnects)** | Utilities | ✅ Enabled | No |
 | **[Debug Mode](#debug-mode)** | Utilities | ❌ Disabled | No |
 
 ---
@@ -178,6 +179,11 @@ Per-user GM setting to automatically unpause the world upon login (**Always**, *
 
 ### Delayed Disconnect Warning
 Foundry shows "You have lost connection to the server" the moment the connection drops, followed by "Server connection re-established" a second later on a short hiccup. With this feature the warning only appears when the connection stays lost for a few seconds: 5 by default, adjustable from 0 to 60 with **Disconnect Warning Delay (Seconds)**. Drops that reconnect sooner show neither message. Longer outages behave as in core (warning, then the page reloads once the connection is back). Foundry reloads the page whenever a reconnect takes 5 seconds or longer, so with a longer delay such a reload can happen without any warning. Players can turn it off for themselves.
+
+### Resync Prompt After Short Disconnects
+Every change in Foundry (an effect added, HP lost, a token moved) goes through the server, which passes it on to everyone connected. Someone who is disconnected at that moment never receives it, and Foundry doesn't send it again later. When a connection is lost for 5 seconds or longer, Foundry reloads the page once it is back, which catches up. After a shorter drop it doesn't, so that player can keep seeing an outdated state, e.g. an effect only they still see, or one everyone else sees but they don't.
+
+With this feature, a short drop posts a chat message whispered to that user and the GMs. The user gets a **Reload** button; the GMs see who dropped, for how long, and whether they have reloaded. Repeated drops replace the open message and count up instead of piling up. GMs get the message for their own drops too. No player opt-out, since the message is mainly there for the GM.
 
 ### Debug Mode
 Enables diagnostic logging in the browser console, for this module and every Nik's Tweaks module that uses the dashboard.

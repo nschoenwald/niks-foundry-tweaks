@@ -35,6 +35,7 @@ import { initFolderCopyMove } from "./features/ui-visuals/folder-copy-move.js";
 import { initCompactFilePicker, STATE_SETTING as COMPACT_FILE_PICKER_STATE } from "./features/ui-visuals/compact-file-picker.js";
 import { initFilePickerThumbnails, prune as pruneFilePickerThumbnails, MAX_MB_SETTING as FILE_PICKER_THUMBNAILS_MAX_MB } from "./features/ui-visuals/file-picker-thumbnails.js";
 import { initDelayedDisconnectWarning } from "./features/utilities/delayed-disconnect-warning.js";
+import { initReconnectResync } from "./features/utilities/reconnect-resync.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
 import { initFixFilePickerCurrentFile } from "./features/patches/fix-file-picker-current-file.js";
@@ -593,6 +594,16 @@ Hooks.once("init", () => {
         restricted: true
     });
 
+    game.settings.register(MODULE_ID, "enableReconnectResync", {
+        name: "Resync Prompt After Short Disconnects",
+        hint: "When a player's connection drops for less than 5 seconds, Foundry reconnects without reloading, and changes made in the meantime never reach that player. This whispers a chat message to the player and the GMs, with a button for the player to reload.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+        restricted: true
+    });
+
     game.settings.register(MODULE_ID, "debugMode", {
         name: "Debug Mode",
         hint: "Enables verbose debug logging in the browser console for all module features. Useful for troubleshooting issues.",
@@ -682,4 +693,7 @@ Hooks.once("ready", async () => {
     game.socket.on(`module.${MODULE_ID}`, (data) => {
         if (data?.action === "clearTargets") onClearTargetsSocket(data);
     });
+
+    // Needs the chat log, so it starts once the world is ready
+    initReconnectResync();
 });
