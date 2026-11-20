@@ -27,6 +27,7 @@ import { initChatScrollFix, enableChatScrollFix, disableChatScrollFix } from "./
 import { initClearTargets, onClearTargetsSocket } from "./features/canvas-tokens/clear-targets.js";
 import { initDisableUndergroundTokenHiding } from "./features/canvas-tokens/disable-underground-token-hiding.js";
 import { initAutoanimationsTeleportUI } from "./features/canvas-tokens/autoanimations-teleport-ui.js";
+import { initTemplateFadeDuringAnimations, updateTemplateFade } from "./features/canvas-tokens/template-fade-during-animations.js";
 import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-combat.js";
 
 // Utilities and patches
@@ -224,6 +225,16 @@ Hooks.once("init", () => {
         config: false,
         type: Boolean,
         default: true
+    });
+
+    game.settings.register(MODULE_ID, "clientEnableTemplateFadeDuringAnimations", {
+        name: "Fade Templates During Animations (Personal)",
+        hint: "Draws a template's colored fill fainter on your screen while an animation plays on it (if enabled by the GM).",
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+        onChange: () => updateTemplateFade()
     });
 
     game.settings.register(MODULE_ID, "clientEnableClearTargetsButton", {
@@ -534,6 +545,28 @@ Hooks.once("init", () => {
         restricted: true
     });
 
+    game.settings.register(MODULE_ID, "enableTemplateFadeDuringAnimations", {
+        name: "Fade Templates During Animations",
+        hint: "While a Sequencer animation (Automated Animations, Boss Loot FX and others) plays on a template, its colored fill is drawn fainter so the animation isn't hidden behind it. The fill comes back when the animation ends.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+        restricted: true,
+        onChange: () => updateTemplateFade()
+    });
+
+    game.settings.register(MODULE_ID, "templateFadeOpacity", {
+        name: "↳ Fill Opacity During Animations (%)",
+        hint: "How visible the template's fill stays while an animation plays on it, as a percentage of its normal opacity (0 to 100). 0 hides it.",
+        scope: "world",
+        config: false,
+        type: Number,
+        default: 25,
+        restricted: true,
+        onChange: () => updateTemplateFade()
+    });
+
     game.settings.register(MODULE_ID, "enableClearTargetsButton", {
         name: "Clear Targets Token Control Button",
         hint: "Adds a button to the Token Controls toolbar that removes targets. For players, it removes their own targets; for GMs, it removes targets for both themselves and all connected players.",
@@ -660,6 +693,7 @@ Hooks.once("setup", () => {
     // Canvas and combat
     initAutoAddTokensToCombat();
     initAutoanimationsTeleportUI();
+    initTemplateFadeDuringAnimations();
     initClearTargets();
 
     // Utilities and fixes

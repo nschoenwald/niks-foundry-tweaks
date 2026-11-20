@@ -54,6 +54,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Clear Targets Token Control Button](#clear-targets-token-control-button)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Disable Underground Token Hiding](#disable-underground-token-hiding)** | Canvas & Tokens | ❌ Disabled | No |
 | **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations-blfx)** | Canvas & Tokens | ✅ Enabled | Yes |
+| **[Fade Templates During Animations](#fade-templates-during-animations)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Delayed Disconnect Warning](#delayed-disconnect-warning)** | Utilities | ✅ Enabled | Yes |
@@ -163,6 +164,9 @@ Improves teleport destination picking (*Misty Step*, *Dimension Door*) for Autom
 * **Automated Animations and BLFX on the same spell**: when both start a teleport for one cast (e.g. A-A's *Misty Step* preset and BLFX's auto-rec), you pick the destination once and only BLFX's teleport plays; A-A's preset range is used if nothing else gives one. Two teleports at once used to fight over the token and could leave it invisible. Turn one of them off for that spell to choose which animation you get.
 * **System modules**: Nik's DnD5e Tweaks also uses the banner for D&D 5e's own Teleport activity.
 
+### Fade Templates During Animations
+While a Sequencer animation (from Automated Animations, Boss Loot FX or any other module) plays on a template, the template's colored fill fades to a fraction of its normal opacity, so the fireball or breath weapon isn't hidden behind it. The fill fades back in when the last animation on it ends; looping animations (*Spirit Guardians*, *Wall of Fire*) keep it faded while they last. Set how visible the fill stays under *Fill Opacity During Animations* (default 25%, 0 hides it). Animations placed at a point instead of on the template don't count. Players can turn it off for themselves.
+
 ---
 
 ## 🏁 Combat Flow
@@ -261,6 +265,7 @@ Hooks.once("niksTweaks.register", (api) => {
 * **Carolingian UI**: Automatic color theme adoption for the dashboard and canvas banners, and top navigation clearance.
 * **Automated Animations**: Ghost token preview (Dynamic Token Rings included) for teleport presets.
 * **Boss Loot FX (BLFX)**: The same teleport banner and ghost preview replace BLFX's destination crosshair.
+* **Sequencer**: Templates fade while a Sequencer animation plays on them.
 * **Nik's DnD5e Tweaks**: Requires this module from 14.70.0 on and adds its settings to the dashboard. With an older Nik's DnD5e Tweaks active, this module stays inactive (and tells the GM to update), so no feature runs twice.
 
 ---

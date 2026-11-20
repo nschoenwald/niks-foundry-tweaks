@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.16.0] - 2026-11-20
+### Added
+- **Fade Templates During Animations**: While an animation from Automated Animations, Boss Loot FX or any other Sequencer module plays on a template, the template's colored fill fades so the animation isn't hidden behind it, and comes back when the animation ends. Set how visible the fill stays (default 25% of its normal opacity, 0 hides it). On by default; players can turn it off for themselves.
+
 ## [14.15.0] - 2026-11-19
 ### Added
 - **Resync Prompt After Short Disconnects**: When someone's connection drops for less than 5 seconds, Foundry reconnects without reloading, so changes made in the meantime (such as an effect being added or removed) never reach them and their game quietly gets out of sync. The user and the GMs now get a whispered chat message about it, with a Reload button for the user. GMs see who dropped and whether they have reloaded. On by default.

@@ -209,6 +209,16 @@ export function getSettingsSchema() {
                             scope: "client"
                         },
                         {
+                            key: "clientEnableTemplateFadeDuringAnimations",
+                            introduced: "14.16.0",
+                            pairedWith: "enableTemplateFadeDuringAnimations",
+                            name: "Fade Templates During Animations",
+                            hint: "Draws a template's colored fill fainter on your screen while an animation plays on it (if enabled by the GM).",
+                            type: "Boolean",
+                            default: true,
+                            scope: "client"
+                        },
+                        {
                             key: "clientEnableClearTargetsButton",
                             introduced: "14.0.0",
                             pairedWith: "enableClearTargetsButton",
@@ -499,6 +509,27 @@ export function getSettingsSchema() {
                             type: "Boolean",
                             default: true,
                             scope: "world"
+                        },
+                        {
+                            key: "enableTemplateFadeDuringAnimations",
+                            introduced: "14.16.0",
+                            docs: "fade-templates-during-animations",
+                            keywords: ["template", "region", "opacity", "transparent", "Sequencer", "Automated Animations", "BLFX", "Boss Loot"],
+                            name: "Fade Templates During Animations",
+                            hint: "While a Sequencer animation (Automated Animations, Boss Loot FX and others) plays on a template, its colored fill is drawn fainter so the animation isn't hidden behind it. The fill comes back when the animation ends. Players can turn it off for themselves.",
+                            type: "Boolean",
+                            default: true,
+                            scope: "world"
+                        },
+                        {
+                            key: "templateFadeOpacity",
+                            introduced: "14.16.0",
+                            name: "Fill Opacity During Animations (%)",
+                            hint: "How visible the template's fill stays while an animation plays on it, as a percentage of its normal opacity (0 to 100, default 25). 0 hides it.",
+                            type: "Number",
+                            default: 25,
+                            scope: "world",
+                            parentKey: "enableTemplateFadeDuringAnimations"
                         }
                     ]
                 }
