@@ -6,6 +6,7 @@
  *
  * @introduced v14.15.0 (as Resync Prompt After Short Disconnects)
  * @updated v14.17.0 (checks against the server, message only on confirmed differences, GM check, API)
+ * @updated v14.18.0 (Sync Now: players can repair actors, items and effects without reloading)
  */
 import { MODULE_ID, getSetting, debug, log } from "../../context.js";
 
@@ -33,6 +34,15 @@ import { MODULE_ID, getSetting, debug, log } from "../../context.js";
  * The message's text is built at render time from its flags, so everyone reads it in their own language. Players only
  * see names of documents they own. If the check itself fails after a reconnect, the message from 14.15.0 ("may be out
  * of sync") is the fallback. The setting key and flag key keep their 14.15.0 names.
+ *
+ * Sync Now (players only): fetches the differing actors from the server and feeds the missed changes to core's own
+ * handler as a `modifyDocumentBatch` event (`game.socket.emitEvent`, the call core uses to replay buffered events), so
+ * collections, derived data, sheets and hooks update as if the broadcast had arrived late. Results are applied in
+ * order. They are credited to the user who last changed the document (never this user), carry `animate: false`
+ * and `nftSyncRepair: true` in their options, and are verified against the server afterwards.
+ * GMs don't get it: many modules run automation from these hooks on the active GM's client, so a replay could apply
+ * something twice. Only world actors and their direct items and effects are repaired. Created documents, removed
+ * fields, tokens and scenes need a reload, which stays available on the message.
  */
 
 /** Core reloads by itself at or above this (client/game.mjs, `reconnectTimeRequireRefresh`). */
@@ -55,6 +65,9 @@ const REPLY_TIMEOUT_MS = 20000;
 
 /** Most documents named in a message. */
 const MAX_LINES = 5;
+
+/** Pauses before verifying a repair (core applies the batch asynchronously). */
+const REPAIR_VERIFY_DELAYS_MS = [500, 1500];
 
 /** Flag key on the chat message. */
 const FLAG = "reconnectResync";
@@ -131,6 +144,99 @@ export function compareDocuments(serverRows, localSources, toUuid, compareStats)
         if (!serverIds.has(id)) differences.push({ uuid: toUuid(id), data: true, items: 0, effects: 0 });
     }
     return differences.sort((a, b) => a.uuid.localeCompare(b.uuid));
+}
+
+/**
+ * Entries sorted by id, so that their order doesn't count as a difference.
+ * @param {object[]} [list]
+ * @returns {object[]}
+ */
+function _sortedById(list) {
+    return [...(list ?? [])].sort((a, b) => String(a._id).localeCompare(String(b._id)));
+}
+
+/**
+ * Whether `local` has a field that `server` no longer has (a diff can't express that without a deletion operator).
+ * @param {object} local
+ * @param {object} server
+ * @returns {boolean}
+ */
+function _hasRemovedKeys(local, server) {
+    for (const [key, value] of Object.entries(local)) {
+        if (value === undefined) continue;
+        if (!(key in server)) return true;
+        if (foundry.utils.isPlainObject(value) && foundry.utils.isPlainObject(server[key]) && _hasRemovedKeys(value, server[key])) return true;
+    }
+    return false;
+}
+
+/**
+ * The update that brings a local source to the server's version.
+ * @param {object} local
+ * @param {object} server
+ * @param {object} [options]
+ * @param {string[]} [options.ignore]    Fields handled elsewhere
+ * @param {string[]} [options.embedded]  Embedded collections that have to match already
+ * @returns {object|null}                The changes, or null if they can't be applied cleanly
+ */
+function _diffSource(local, server, { ignore = [], embedded = [] } = {}) {
+    for (const key of embedded) {
+        if (!foundry.utils.equals(_sortedById(local[key]), _sortedById(server[key]))) return null;
+    }
+    const skip = new Set(["_id", ...ignore, ...embedded]);
+    const strip = source => Object.fromEntries(Object.entries(source).filter(([key]) => !skip.has(key)));
+    const localData = strip(local);
+    const serverData = strip(server);
+    if (_hasRemovedKeys(localData, serverData)) return null;
+    return foundry.utils.diffObject(localData, serverData);
+}
+
+/**
+ * Build the socket responses that bring one actor to the server's version.
+ * @param {object} local                       This client's actor source
+ * @param {object} server                      The server's actor source
+ * @param {string} actorUuid
+ * @param {(source: object) => string} authorOf  The user to credit for a change
+ * @param {string} deleteUserId                The user to credit for deletions
+ * @returns {{operations: object[], complete: boolean}}
+ */
+export function buildActorRepair(local, server, actorUuid, authorOf, deleteUserId) {
+    const response = (type, action, result, userId, parentUuid) => ({
+        type, action, result, userId, broadcast: true,
+        operation: { ...(parentUuid ? { parentUuid } : {}), animate: false, nftSyncRepair: true }
+    });
+    const plans = {};
+    let complete = true;
+    for (const [collection, type] of [["effects", "ActiveEffect"], ["items", "Item"]]) {
+        const localById = new Map((local[collection] ?? []).map(e => [e._id, e]));
+        const serverById = new Map((server[collection] ?? []).map(e => [e._id, e]));
+        const deleted = [...localById.keys()].filter(id => !serverById.has(id));
+        const writes = [];
+        for (const [id, entry] of serverById) {
+            const existing = localById.get(id);
+            if (!existing) {
+                writes.push(response(type, "create", [entry], authorOf(entry), actorUuid));
+                continue;
+            }
+            if (_version(existing) === _version(entry)) continue;
+            const changes = _diffSource(existing, entry, { embedded: type === "Item" ? ["effects"] : [] });
+            if (!changes) complete = false;
+            else if (!foundry.utils.isEmpty(changes)) writes.push(response(type, "update", [{ ...changes, _id: id }], authorOf(entry), actorUuid));
+        }
+        plans[collection] = {
+            deletes: deleted.length ? [response(type, "delete", deleted, deleteUserId, actorUuid)] : [],
+            writes
+        };
+    }
+
+    // Effects can belong to items' lifetimes, so effects go first on removal and last on creation
+    const operations = [...plans.effects.deletes, ...plans.items.deletes, ...plans.items.writes, ...plans.effects.writes];
+    if (local._stats?.modifiedTime !== server._stats?.modifiedTime) {
+        const changes = _diffSource(local, server, { ignore: ["items", "effects"] });
+        if (!changes) complete = false;
+        else if (!foundry.utils.isEmpty(changes)) operations.push(response("Actor", "update", [{ ...changes, _id: local._id }], authorOf(server)));
+    }
+    return { operations, complete };
 }
 
 /**
@@ -225,7 +331,7 @@ async function _runCheck(duration) {
 function _openPrompts() {
     return game.messages.contents.filter(m => {
         const flag = m.getFlag(MODULE_ID, FLAG);
-        return flag && (flag.userId === game.user.id) && !flag.reloaded && m.isOwner;
+        return flag && (flag.userId === game.user.id) && !flag.reloaded && !flag.repaired && m.isOwner;
     });
 }
 
@@ -271,6 +377,75 @@ async function _postPrompt({ differences = null, duration = 0 }) {
             }
         }
     });
+}
+
+/* -------------------------------------------- */
+/*  Sync Now                                    */
+/* -------------------------------------------- */
+
+/**
+ * Bring this player's actors up to date without reloading, and update the message.
+ * @param {ChatMessage} message
+ * @returns {Promise<{status: "ok"|"drift"|"error", differences: object[]}>}
+ */
+export async function repairSync(message) {
+    if (game.user.isGM) return { status: "error", differences: [] };
+    if (_running) await _running;
+    if (!game.messages.has(message.id)) return { status: "ok", differences: [] }; // A clean check already removed it
+    _running ??= _runRepair(message).finally(() => { _running = null; });
+    return _running;
+}
+
+/**
+ * @param {ChatMessage} message
+ * @returns {Promise<{status: "ok"|"drift"|"error", differences: object[]}>}
+ */
+async function _runRepair(message) {
+    let remaining;
+    try {
+        const deleteUserId = game.users.activeGM?.id ?? game.users.find(u => u.isGM)?.id;
+        if (!deleteUserId) throw new Error("No GM user to credit the changes to.");
+        const authorOf = source => {
+            const id = source?._stats?.lastModifiedBy;
+            return (id && (id !== game.user.id) && game.users.has(id)) ? id : deleteUserId;
+        };
+
+        const ActorClass = Actor.implementation;
+        const results = [];
+        for (const { uuid } of await _fetchDifferences()) {
+            const id = uuid.match(/^Actor\.([^.]+)$/)?.[1];
+            const actor = id ? game.actors.get(id) : null;
+            if (!actor) continue;
+            const [fresh] = await _withTimeout(ActorClass.database.get(ActorClass, { query: { _id: id } }));
+            if (!fresh) continue;
+            results.push(...buildActorRepair(actor._source, fresh.toObject(), actor.uuid, authorOf, deleteUserId).operations);
+        }
+        if (results.length) game.socket.emitEvent(["modifyDocumentBatch", { results }]);
+
+        for (const delay of REPAIR_VERIFY_DELAYS_MS) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            remaining = await _fetchDifferences();
+            if (!remaining.length) break;
+        }
+    } catch (err) {
+        log("Sync Check: could not sync without reloading.", err);
+        remaining = null;
+    }
+
+    const flag = message.getFlag(MODULE_ID, FLAG);
+    const repaired = Array.isArray(remaining) && !remaining.length;
+    if (!repaired) ui.notifications.warn("NFT.SyncCheck.RepairFailed", { localize: true });
+    try {
+        if (game.messages.has(message.id)) {
+            await message.setFlag(MODULE_ID, FLAG, repaired
+                ? { ...flag, repaired: true, repairFailed: false }
+                : { ...flag, repairFailed: true, differences: remaining ?? flag.differences });
+        }
+    } catch (err) {
+        log("Sync Check: could not update the chat message.", err);
+    }
+    if (repaired) return { status: "ok", differences: [] };
+    return { status: remaining ? "drift" : "error", differences: remaining ?? [] };
 }
 
 /* -------------------------------------------- */
@@ -475,13 +650,16 @@ function _onRenderChatMessage(message, html) {
     const isSelf = flag.userId === game.user.id;
     const hasDifferences = Array.isArray(flag.differences);
     const seconds = (Number(flag.duration) / 1000).toFixed(1);
+    const canRepair = isSelf && hasDifferences && !game.user.isGM && !flag.repairFailed && !flag.reloaded && !flag.repaired
+        && flag.differences.some(d => d.uuid.startsWith("Actor."));
 
     const box = document.createElement("div");
     box.classList.add("nft-reconnect-resync");
 
     const body = document.createElement("p");
     if (hasDifferences) {
-        body.textContent = game.i18n.format(isSelf ? "NFT.SyncCheck.BodySelf" : "NFT.SyncCheck.Body", { name });
+        const selfKey = canRepair ? "NFT.SyncCheck.BodySelfRepair" : "NFT.SyncCheck.BodySelf";
+        body.textContent = game.i18n.format(isSelf ? selfKey : "NFT.SyncCheck.Body", { name });
     } else {
         body.textContent = isSelf
             ? game.i18n.format("NFT.ReconnectResync.BodySelf", { seconds })
@@ -498,19 +676,39 @@ function _onRenderChatMessage(message, html) {
         box.append(count);
     }
 
-    if (flag.reloaded) {
+    if (flag.reloaded || flag.repaired) {
         const status = document.createElement("p");
         status.classList.add("nft-reconnect-resync-status");
         status.innerHTML = `<i class="fa-solid fa-check"></i> `;
-        status.append(game.i18n.format(isSelf ? "NFT.ReconnectResync.ReloadedSelf" : "NFT.ReconnectResync.Reloaded", { name }));
+        const keys = flag.repaired
+            ? ["NFT.SyncCheck.RepairedSelf", "NFT.SyncCheck.Repaired"]
+            : ["NFT.ReconnectResync.ReloadedSelf", "NFT.ReconnectResync.Reloaded"];
+        status.append(game.i18n.format(isSelf ? keys[0] : keys[1], { name }));
         box.append(status);
     } else if (isSelf) {
+        if (flag.repairFailed) {
+            const failed = document.createElement("p");
+            failed.classList.add("nft-reconnect-resync-status");
+            failed.textContent = game.i18n.localize("NFT.SyncCheck.RepairFailed");
+            box.append(failed);
+        }
+        const actions = document.createElement("div");
+        actions.classList.add("nft-reconnect-resync-actions");
+        if (canRepair) {
+            const sync = document.createElement("button");
+            sync.type = "button";
+            sync.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> `;
+            sync.append(game.i18n.localize("NFT.SyncCheck.SyncButton"));
+            sync.addEventListener("click", event => _onRepair(event, message));
+            actions.append(sync);
+        }
         const button = document.createElement("button");
         button.type = "button";
         button.innerHTML = `<i class="fa-solid fa-rotate-right"></i> `;
         button.append(game.i18n.localize("NFT.ReconnectResync.Button"));
         button.addEventListener("click", event => _onReload(event, message));
-        box.append(button);
+        actions.append(button);
+        box.append(actions);
     } else {
         const status = document.createElement("p");
         status.classList.add("nft-reconnect-resync-status");
@@ -519,6 +717,20 @@ function _onRenderChatMessage(message, html) {
     }
 
     content.replaceChildren(box);
+}
+
+/**
+ * Try to catch up without reloading. The message re-renders with the result.
+ * @param {PointerEvent} event
+ * @param {ChatMessage} message
+ */
+async function _onRepair(event, message) {
+    event.preventDefault();
+    const actions = event.currentTarget.closest(".nft-reconnect-resync-actions");
+    const buttons = [...actions.querySelectorAll("button")];
+    for (const button of buttons) button.disabled = true;
+    await repairSync(message);
+    for (const button of buttons) button.disabled = false;
 }
 
 /**

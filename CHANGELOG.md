@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.18.0] - 2026-11-21
+### Added
+- **Sync Check**: Players now get a **Sync Now** button next to Reload. It brings missed changes to actors, items and effects into their game without reloading. If something can't be fixed this way, the message asks them to reload. GMs keep the Reload button, so other modules' automation can't run twice.
+
 ## [14.17.0] - 2026-11-21
 ### Added
 - **Sync Check**: Replaces the Resync Prompt. Each user's game is now compared with the server after a short disconnect and when their browser tab comes back after a while. The whispered message with the Reload button only appears when something really differs, and GMs see what it is. GMs can also right-click a user in the Players list to check them or everyone.

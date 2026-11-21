@@ -189,7 +189,9 @@ Every change in Foundry (an effect added, HP lost, a token moved) goes through t
 
 This feature compares a user's game with the server after a short drop, when their browser tab comes back after at least a minute in the background, or when a GM right-clicks a user in the Players list and picks **Check Sync** (or **Check Sync for All**). It looks at actors, their items and effects, and the tokens of the scene the user is viewing.
 
-If everything matches, nobody sees anything. If something really differs (it is checked twice, so changes still on their way don't count), the user and the GMs get a whispered chat message. The user gets a **Reload** button; GMs see what differs and whether the user has reloaded. Players only see the names of documents they own. If the check itself can't run after a drop, the message says the game *may* be out of sync. No player opt-out, since the message is mainly there for the GM.
+If everything matches, nobody sees anything. If something really differs (it is checked twice, so changes still on their way don't count), the user and the GMs get a whispered chat message. The user gets a **Reload** button; GMs see what differs and whether the user has caught up.
+
+Players also get **Sync Now**, which applies the missed changes to actors, their items and their effects without reloading, then checks the result against the server. If something can't be applied this way (for example a token difference or a new actor), the message asks them to reload. GMs only get Reload, because replaying changes on a GM's client could make other modules' automation run twice. Players only see the names of documents they own. If the check itself can't run after a drop, the message says the game *may* be out of sync. No player opt-out, since the message is mainly there for the GM.
 
 Not checked yet: effects stored on items, changes to a token other than its items and effects (such as position or an unlinked token's HP), other scenes, and other document types such as journals or combats.
 

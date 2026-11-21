@@ -47,5 +47,11 @@
   "NFT.SyncCheck.SummaryPrefix": "Sync-Prüfung:",
   "NFT.SyncCheck.SummaryDrift": "Nicht synchron: {names}.",
   "NFT.SyncCheck.SummaryNoAnswer": "Keine Antwort: {names}.",
-  "NFT.SyncCheck.SummaryError": "Prüfung fehlgeschlagen: {names}."
+  "NFT.SyncCheck.SummaryError": "Prüfung fehlgeschlagen: {names}.",
+
+  "NFT.SyncCheck.BodySelfRepair": "Dein Spiel ist nicht mehr synchron mit dem Server. Einige Änderungen (z. B. hinzugefügte oder entfernte Effekte) sind nicht bei dir angekommen. Nutze „Jetzt synchronisieren“, oder lade neu, falls danach noch etwas nicht stimmt.",
+  "NFT.SyncCheck.SyncButton": "Jetzt synchronisieren",
+  "NFT.SyncCheck.RepairedSelf": "Synchronisiert, kein Neuladen nötig.",
+  "NFT.SyncCheck.Repaired": "{name} wurde ohne Neuladen synchronisiert.",
+  "NFT.SyncCheck.RepairFailed": "Einige Änderungen ließen sich nicht direkt synchronisieren. Bitte lade neu."
 }

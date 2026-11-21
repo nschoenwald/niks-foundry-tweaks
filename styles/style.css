@@ -2414,7 +2414,14 @@ body.nft-compact-file-picker #file-picker .subfooter input[type="file"] {
     padding-left: 1.125rem;
 }
 
-.nft-reconnect-resync button {
-    width: 100%;
+.nft-reconnect-resync .nft-reconnect-resync-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.nft-reconnect-resync .nft-reconnect-resync-actions button {
+    flex: 1 1 8rem;
+    width: auto;
     margin-top: 0.125rem;
 }

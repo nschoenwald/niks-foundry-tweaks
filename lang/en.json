@@ -47,5 +47,11 @@
   "NFT.SyncCheck.SummaryPrefix": "Sync Check:",
   "NFT.SyncCheck.SummaryDrift": "Out of sync: {names}.",
   "NFT.SyncCheck.SummaryNoAnswer": "No answer: {names}.",
-  "NFT.SyncCheck.SummaryError": "Check failed: {names}."
+  "NFT.SyncCheck.SummaryError": "Check failed: {names}.",
+
+  "NFT.SyncCheck.BodySelfRepair": "Your game is out of sync with the server. Some changes (e.g. effects added or removed) didn't reach you. Use Sync Now to catch up, or Reload if something still looks wrong.",
+  "NFT.SyncCheck.SyncButton": "Sync Now",
+  "NFT.SyncCheck.RepairedSelf": "Synced. No reload needed.",
+  "NFT.SyncCheck.Repaired": "{name} has synced without reloading.",
+  "NFT.SyncCheck.RepairFailed": "Some changes couldn't be synced directly. Please reload."
 }

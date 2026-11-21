@@ -607,7 +607,7 @@ export function getSettingsSchema() {
                             docs: "sync-check",
                             keywords: ["connection", "disconnect", "reconnect", "sync", "desync", "out of sync", "resync", "reload", "refresh", "chat"],
                             name: "Sync Check",
-                            hint: "Compares each user's actors, items, effects and scene tokens with the server after a short disconnect, after a long time in the background, or when a GM right-clicks a user in the Players list. If something really differs, that user and the GMs get a whispered chat message, with a Reload button for the user. If everything matches, nothing is shown.",
+                            hint: "Compares each user's actors, items, effects and scene tokens with the server after a short disconnect, after a long time in the background, or when a GM right-clicks a user in the Players list. If something really differs, that user and the GMs get a whispered chat message, with Sync Now (players) and Reload buttons. If everything matches, nothing is shown.",
                             type: "Boolean",
                             default: true,
                             scope: "world"
