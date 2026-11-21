@@ -5,10 +5,28 @@
  * @introduced v14.0.0 (moved from Nik's DnD5e Tweaks, added there in v14.15.0)
  * @updated niks-dnd5e-tweaks v14.49.0 (Capped layout retries and debounced resize handling)
  * @updated niks-dnd5e-tweaks v14.57.0 (One render hook instead of two, observer disconnected while disabled, dropped pre-V13 selectors)
+ * @updated v14.16.1 (Render hook and observer share one queued pass instead of measuring the toolbars twice per render)
  */
 import { getSetting, debug } from "../../context.js";
 
 let observer = null;
+
+/** Whether a toolbar pass is already queued for this microtask checkpoint. */
+let applyQueued = false;
+
+/**
+ * Queue one toolbar pass. A Scene Controls render triggers both the render hook and the MutationObserver;
+ * both land here, so the toolbars are measured once per render instead of twice. Runs as a microtask,
+ * i.e. still before the next paint.
+ */
+function scheduleToolbarLimitation() {
+    if (applyQueued) return;
+    applyQueued = true;
+    queueMicrotask(() => {
+        applyQueued = false;
+        applyToolbarLimitation();
+    });
+}
 
 /** Maximum number of animation frames to wait for a toolbar to be laid out before giving up. */
 const MAX_LAYOUT_RETRIES = 10;
@@ -96,6 +114,9 @@ export function applyToolbarLimitation() {
         resetToolbars();
         return;
     }
+
+    // Ignore the style and arrow changes made below; setupObserver() watches again at the end
+    observer?.disconnect();
 
     // Clean up any macro toolbars if they were previously targeted
     const macroElements = document.querySelectorAll(".nft-scrollable-toolbar, #hotbar, #macro-list, .hotbar, .macro-bar, .macro-toolbar");
@@ -296,29 +317,13 @@ export function resetToolbars() {
 }
 
 /**
- * Sets up a MutationObserver on the scene controls root container to recalculate
- * whenever sub-tools or active control layers change dynamically.
+ * Watch the scene controls root container (again) to recalculate whenever sub-tools or active control layers
+ * change dynamically. Called at the end of every pass, after the pass's own DOM changes.
  */
 function setupObserver() {
-    if (observer) return;
     const root = ui.controls?.element;
     if (!root) return;
-
-    observer = new MutationObserver(() => {
-        // Disconnect temporarily to avoid triggering on our own style/DOM mutations
-        observer.disconnect();
-        applyToolbarLimitation();
-        // Disabling the feature drops the observer (see resetToolbars)
-        if (!observer) return;
-        // Re-observe
-        const activeRoot = ui.controls?.element;
-        if (activeRoot) {
-            observer.observe(activeRoot, { childList: true, subtree: true });
-        } else {
-            observer = null;
-        }
-    });
-
+    observer ??= new MutationObserver(() => scheduleToolbarLimitation());
     observer.observe(root, { childList: true, subtree: true });
 }
 
@@ -332,14 +337,10 @@ export function initToolbarLimitation() {
     initialized = true;
 
     // Recalculate on Scene Controls render
-    Hooks.on("renderSceneControls", () => {
-        applyToolbarLimitation();
-    });
+    Hooks.on("renderSceneControls", () => scheduleToolbarLimitation());
 
     // Initial check when canvas/UI is ready
-    Hooks.on("canvasReady", () => {
-        applyToolbarLimitation();
-    });
+    Hooks.on("canvasReady", () => scheduleToolbarLimitation());
 
     // Recalculate layout on window resize, debounced so dragging the window edge
     // does not force a layout measurement on every resize event

@@ -1756,9 +1756,8 @@ button.nft-feature-name:hover {
     display: flex;
     align-items: center;
     gap: 14px;
-    background: rgba(18, 22, 28, 0.90);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* Opaque instead of a backdrop blur: the blur was redone on every canvas frame while the HUD is shown */
+    background: rgba(18, 22, 28, 0.95);
     border: 1px solid rgba(0, 220, 200, 0.35);
     border-radius: 30px;
     padding: 8px 18px 8px 14px;
@@ -1778,20 +1777,44 @@ button.nft-feature-name:hover {
     border: 1px solid rgba(0, 220, 200, 0.5);
     color: #00ffee;
     font-size: 15px;
+    position: relative;
+    box-shadow: 0 0 6px rgba(0, 220, 200, 0.4);
     animation: nft-portal-pulse 2s infinite ease-in-out;
+}
+
+/* The stronger glow fades in on a layer of its own: animating opacity and transform avoids a repaint every frame */
+.nft-teleport-badge-icon::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    box-shadow: 0 0 14px rgba(0, 220, 200, 0.8);
+    opacity: 0;
+    pointer-events: none;
+    animation: nft-portal-glow 2s infinite ease-in-out;
 }
 
 @keyframes nft-portal-pulse {
 
     0%,
     100% {
-        box-shadow: 0 0 6px rgba(0, 220, 200, 0.4);
         transform: scale(1);
     }
 
     50% {
-        box-shadow: 0 0 14px rgba(0, 220, 200, 0.8);
         transform: scale(1.08);
+    }
+}
+
+@keyframes nft-portal-glow {
+
+    0%,
+    100% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
     }
 }
 

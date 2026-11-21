@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.16.1] - 2026-11-21
+### Changed
+- **Toolbar Limitation**: Measures the scene control toolbars once per change instead of twice, so switching layers and tools is a little lighter.
+- **Enhanced Teleport Targeting UI**: The teleport bar over the map and its pulsing icon are less work for the graphics card while you pick a destination. They look almost the same.
+
 ## [14.16.0] - 2026-11-20
 ### Added
 - **Fade Templates During Animations**: While an animation from Automated Animations, Boss Loot FX or any other Sequencer module plays on a template, the template's colored fill fades so the animation isn't hidden behind it, and comes back when the animation ends. Set how visible the fill stays (default 25% of its normal opacity, 0 hides it). On by default; players can turn it off for themselves.
