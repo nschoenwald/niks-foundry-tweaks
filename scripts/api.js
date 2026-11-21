@@ -35,11 +35,16 @@
  * `{ x, y, rotation, distance, center }`, null when cancelled, or undefined when it couldn't start (API_VERSION 3,
  * see `autoanimations-teleport-ui.js`).
  *
+ * `syncCheck.check()` compares this client with the server, posts or clears the chat message and resolves
+ * `{ status: "ok"|"drift"|"error", differences }`. `syncCheck.checkUsers(userIds?)` (GM) asks connected users to do
+ * the same and resolves their status by user id (API_VERSION 4, see `sync-check.js`).
+ *
  * Bump `API_VERSION` when something here changes in a way add-ons must know about.
  *
  * @introduced v14.0.0
  * @updated v14.7.0 (API_VERSION 2: `choicePicker` setting option)
  * @updated v14.9.0 (API_VERSION 3: `teleportTargeting` picker and extension)
+ * @updated v14.17.0 (API_VERSION 4: `syncCheck`)
  */
 import { createContext } from "./utils/create-context.js";
 import { attachHudPositioning } from "./utils/hud-position-helper.js";
@@ -49,9 +54,10 @@ import {
 } from "./settings-registry.js";
 import { NiksTweaksSettingsApp } from "./settings-app.js";
 import { isTeleportTargetingActive, pickTeleportDestination } from "./features/canvas-tokens/autoanimations-teleport-ui.js";
+import { checkSync, requestSyncCheck } from "./features/utilities/sync-check.js";
 
 /** Version of the add-on contract. */
-export const API_VERSION = 3;
+export const API_VERSION = 4;
 
 /**
  * Build the API object.
@@ -81,6 +87,11 @@ export function createApi() {
         teleportTargeting: {
             isActive: isTeleportTargetingActive,
             pickDestination: pickTeleportDestination
+        },
+        // Sync Check
+        syncCheck: {
+            check: () => checkSync(),
+            checkUsers: (userIds) => requestSyncCheck(userIds)
         }
     };
 }

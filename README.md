@@ -58,7 +58,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Delayed Disconnect Warning](#delayed-disconnect-warning)** | Utilities | ✅ Enabled | Yes |
-| **[Resync Prompt After Short Disconnects](#resync-prompt-after-short-disconnects)** | Utilities | ✅ Enabled | No |
+| **[Sync Check](#sync-check)** | Utilities | ✅ Enabled | No |
 | **[Debug Mode](#debug-mode)** | Utilities | ❌ Disabled | No |
 
 ---
@@ -184,10 +184,14 @@ Per-user GM setting to automatically unpause the world upon login (**Always**, *
 ### Delayed Disconnect Warning
 Foundry shows "You have lost connection to the server" the moment the connection drops, followed by "Server connection re-established" a second later on a short hiccup. With this feature the warning only appears when the connection stays lost for a few seconds: 5 by default, adjustable from 0 to 60 with **Disconnect Warning Delay (Seconds)**. Drops that reconnect sooner show neither message. Longer outages behave as in core (warning, then the page reloads once the connection is back). Foundry reloads the page whenever a reconnect takes 5 seconds or longer, so with a longer delay such a reload can happen without any warning. Players can turn it off for themselves.
 
-### Resync Prompt After Short Disconnects
+### Sync Check
 Every change in Foundry (an effect added, HP lost, a token moved) goes through the server, which passes it on to everyone connected. Someone who is disconnected at that moment never receives it, and Foundry doesn't send it again later. When a connection is lost for 5 seconds or longer, Foundry reloads the page once it is back, which catches up. After a shorter drop it doesn't, so that player can keep seeing an outdated state, e.g. an effect only they still see, or one everyone else sees but they don't.
 
-With this feature, a short drop posts a chat message whispered to that user and the GMs. The user gets a **Reload** button; the GMs see who dropped, for how long, and whether they have reloaded. Repeated drops replace the open message and count up instead of piling up. GMs get the message for their own drops too. No player opt-out, since the message is mainly there for the GM.
+This feature compares a user's game with the server after a short drop, when their browser tab comes back after at least a minute in the background, or when a GM right-clicks a user in the Players list and picks **Check Sync** (or **Check Sync for All**). It looks at actors, their items and effects, and the tokens of the scene the user is viewing.
+
+If everything matches, nobody sees anything. If something really differs (it is checked twice, so changes still on their way don't count), the user and the GMs get a whispered chat message. The user gets a **Reload** button; GMs see what differs and whether the user has reloaded. Players only see the names of documents they own. If the check itself can't run after a drop, the message says the game *may* be out of sync. No player opt-out, since the message is mainly there for the GM.
+
+Not checked yet: effects stored on items, changes to a token other than its items and effects (such as position or an unlinked token's HP), other scenes, and other document types such as journals or combats.
 
 ### Debug Mode
 Enables diagnostic logging in the browser console, for this module and every Nik's Tweaks module that uses the dashboard.
@@ -253,6 +257,7 @@ Hooks.once("niksTweaks.register", (api) => {
 * Your module doesn't need its own Configure Settings entry: the dashboard opens from Nik's Foundry Tweaks. If you want one anyway, register a menu with `type: api.SettingsApp` under the key `settingsDashboard` (it then shows the "N new" count too).
 * Reuse core's tab and section ids to place settings next to related ones, or add your own tab (give it an `order`; core uses 0, 10, 20, 30 and 100 for Utilities & Debug).
 * Extensions core reads: `contextMenuStyling` (`deleteLabels`, `duplicateLabels`, `violetLabels`, `backgroundVars`), `hidePrivateGMRolls` (`isRoll(message)`), `autoAddTokensToCombat` (`skipToken(tokenDocument)`), `carolingianHarmony` (`combatantClass(combatant)`), `readableTextSize` (`chat: true` when your stylesheet covers chat cards).
+* Sync Check: `api.syncCheck.check()` compares this client with the server; `api.syncCheck.checkUsers(userIds?)` (GM) asks connected users to do the same.
 * List settings (`list: true`, a comma-separated String) open the list editor. Add `choicePicker` to pick entries from known options instead: `{ getGroups: () => [{ label, value?, choices: [{ value, label, img?, children? }] }], mode?: "hide" | "select" | (readValue) => …, normalize?: (entry) => value|null, noun?, resetTitle? }`. `"hide"` shows eye icons (stored values are hidden), `"select"` checkboxes; a `mode` function gets `readValue(settingKey)` for the dashboard's unsaved value of another setting. Groups with a `value` get an "All …" toggle, and options under a picked group or option show as included. Entries that match no option are kept. Needs 14.7.0 (`api.API_VERSION` 2); older versions show the list editor.
 * Teleport picker (API_VERSION 3): `api.teleportTargeting.isActive()` and `await api.teleportTargeting.pickDestination({ sourceToken, itemName?, range?, checkCollision?, customImg?, customImgScale? })` → `{ x, y, rotation, distance, center }` (top-left `x`/`y`), `null` when cancelled, `undefined` when it couldn't start. Extension `teleportTargeting`: `{ getTeleportInfo: ({ sourceToken, source }) => ({ range, itemName }) }` supplies range (scene units) and name for BLFX teleports.
 * Helpers: `api.createContext({ moduleId, label, debugNamespace: "niks-foundry-tweaks" })` (logging, cached setting reads, feature checks following the shared Debug Mode) and `api.attachHudPositioning(element)` (keeps a floating banner centered on the visible canvas).

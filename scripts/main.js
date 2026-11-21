@@ -36,7 +36,7 @@ import { initFolderCopyMove } from "./features/ui-visuals/folder-copy-move.js";
 import { initCompactFilePicker, STATE_SETTING as COMPACT_FILE_PICKER_STATE } from "./features/ui-visuals/compact-file-picker.js";
 import { initFilePickerThumbnails, prune as pruneFilePickerThumbnails, MAX_MB_SETTING as FILE_PICKER_THUMBNAILS_MAX_MB } from "./features/ui-visuals/file-picker-thumbnails.js";
 import { initDelayedDisconnectWarning } from "./features/utilities/delayed-disconnect-warning.js";
-import { initReconnectResync } from "./features/utilities/reconnect-resync.js";
+import { initSyncCheck, initSyncCheckHooks, onSyncCheckSocket } from "./features/utilities/sync-check.js";
 import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh.js";
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
 import { initFixFilePickerCurrentFile } from "./features/patches/fix-file-picker-current-file.js";
@@ -628,8 +628,8 @@ Hooks.once("init", () => {
     });
 
     game.settings.register(MODULE_ID, "enableReconnectResync", {
-        name: "Resync Prompt After Short Disconnects",
-        hint: "When a player's connection drops for less than 5 seconds, Foundry reconnects without reloading, and changes made in the meantime never reach that player. This whispers a chat message to the player and the GMs, with a button for the player to reload.",
+        name: "Sync Check",
+        hint: "Compares each user's game with the server after a short disconnect, after a long time in the background, or when a GM asks. If something differs, the user and the GMs get a whispered chat message, with a button for the user to reload.",
         scope: "world",
         config: false,
         type: Boolean,
@@ -699,6 +699,7 @@ Hooks.once("setup", () => {
     // Utilities and fixes
     initAutoUnpauseOnLogin();
     initDelayedDisconnectWarning();
+    initSyncCheckHooks();
     initFolderCopyMove();
     initCompactFilePicker();
     initFilePickerThumbnails();
@@ -724,10 +725,11 @@ Hooks.once("ready", async () => {
     updateClearSceneToggles();
 
     // One socket listener for the whole module, routing by action
-    game.socket.on(`module.${MODULE_ID}`, (data) => {
+    game.socket.on(`module.${MODULE_ID}`, (data, senderId) => {
         if (data?.action === "clearTargets") onClearTargetsSocket(data);
+        else if (data?.action?.startsWith?.("syncCheck")) onSyncCheckSocket(data, senderId);
     });
 
-    // Needs the chat log, so it starts once the world is ready
-    initReconnectResync();
+    // Watches the connection once the world is ready
+    initSyncCheck();
 });

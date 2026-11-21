@@ -30,5 +30,22 @@
   "NFT.ReconnectResync.Waiting": "Warte darauf, dass {name} neu lädt.",
   "NFT.ReconnectResync.Reloaded": "{name} hat neu geladen.",
   "NFT.ReconnectResync.ReloadedSelf": "Du hast neu geladen.",
-  "NFT.ReconnectResync.UnknownUser": "Ein Benutzer"
+  "NFT.ReconnectResync.UnknownUser": "Ein Benutzer",
+
+  "NFT.SyncCheck.BodySelf": "Dein Spiel ist nicht mehr synchron mit dem Server. Einige Änderungen (z. B. hinzugefügte oder entfernte Effekte) sind nicht bei dir angekommen. Lade neu, um den aktuellen Stand zu sehen.",
+  "NFT.SyncCheck.Body": "Das Spiel von {name} ist nicht mehr synchron mit dem Server. Einige Änderungen (z. B. hinzugefügte oder entfernte Effekte) erreichen {name} erst nach dem Neuladen.",
+  "NFT.SyncCheck.PartEffects": "Effekte ({count})",
+  "NFT.SyncCheck.PartItems": "Gegenstände ({count})",
+  "NFT.SyncCheck.PartData": "Daten",
+  "NFT.SyncCheck.UnknownDocument": "Unbekannt",
+  "NFT.SyncCheck.More": "und {count} weitere",
+  "NFT.SyncCheck.Documents": "{count} Dokumente",
+  "NFT.SyncCheck.MenuUser": "Synchronität prüfen",
+  "NFT.SyncCheck.MenuAll": "Synchronität aller prüfen",
+  "NFT.SyncCheck.Checking": "Sync-Prüfung läuft…",
+  "NFT.SyncCheck.SummaryOk": "Sync-Prüfung: Alle {count} geprüften Benutzer sind synchron.",
+  "NFT.SyncCheck.SummaryPrefix": "Sync-Prüfung:",
+  "NFT.SyncCheck.SummaryDrift": "Nicht synchron: {names}.",
+  "NFT.SyncCheck.SummaryNoAnswer": "Keine Antwort: {names}.",
+  "NFT.SyncCheck.SummaryError": "Prüfung fehlgeschlagen: {names}."
 }

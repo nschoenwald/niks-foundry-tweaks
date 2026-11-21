@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.17.0] - 2026-11-21
+### Added
+- **Sync Check**: Replaces the Resync Prompt. Each user's game is now compared with the server after a short disconnect and when their browser tab comes back after a while. The whispered message with the Reload button only appears when something really differs, and GMs see what it is. GMs can also right-click a user in the Players list to check them or everyone.
+
 ## [14.16.2] - 2026-11-21
 ### Changed
 - **Faster loading**: The module now ships as one compact script file instead of 40 separate ones, so the game loads a little faster, most noticeably for players connecting over the internet.

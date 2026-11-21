@@ -604,10 +604,10 @@ export function getSettingsSchema() {
                         {
                             key: "enableReconnectResync",
                             introduced: "14.15.0",
-                            docs: "resync-prompt-after-short-disconnects",
-                            keywords: ["connection", "disconnect", "reconnect", "sync", "desync", "out of sync", "reload", "refresh", "chat"],
-                            name: "Resync Prompt After Short Disconnects",
-                            hint: "When someone's connection drops for less than 5 seconds, Foundry reconnects without reloading, and changes made by others in the meantime (such as an effect being added or removed) never reach them. This whispers a chat message to that user and the GMs, with a Reload button for the user. GMs see who dropped and whether they have reloaded.",
+                            docs: "sync-check",
+                            keywords: ["connection", "disconnect", "reconnect", "sync", "desync", "out of sync", "resync", "reload", "refresh", "chat"],
+                            name: "Sync Check",
+                            hint: "Compares each user's actors, items, effects and scene tokens with the server after a short disconnect, after a long time in the background, or when a GM right-clicks a user in the Players list. If something really differs, that user and the GMs get a whispered chat message, with a Reload button for the user. If everything matches, nothing is shown.",
                             type: "Boolean",
                             default: true,
                             scope: "world"

@@ -30,5 +30,22 @@
   "NFT.ReconnectResync.Waiting": "Waiting for {name} to reload.",
   "NFT.ReconnectResync.Reloaded": "{name} has reloaded.",
   "NFT.ReconnectResync.ReloadedSelf": "You have reloaded.",
-  "NFT.ReconnectResync.UnknownUser": "A user"
+  "NFT.ReconnectResync.UnknownUser": "A user",
+
+  "NFT.SyncCheck.BodySelf": "Your game is out of sync with the server. Some changes (e.g. effects added or removed) didn't reach you. Reload to catch up.",
+  "NFT.SyncCheck.Body": "{name}'s game is out of sync with the server. Some changes (e.g. effects added or removed) haven't reached them. They need to reload to catch up.",
+  "NFT.SyncCheck.PartEffects": "effects ({count})",
+  "NFT.SyncCheck.PartItems": "items ({count})",
+  "NFT.SyncCheck.PartData": "data",
+  "NFT.SyncCheck.UnknownDocument": "Unknown",
+  "NFT.SyncCheck.More": "and {count} more",
+  "NFT.SyncCheck.Documents": "{count} documents",
+  "NFT.SyncCheck.MenuUser": "Check Sync",
+  "NFT.SyncCheck.MenuAll": "Check Sync for All",
+  "NFT.SyncCheck.Checking": "Sync Check: checking…",
+  "NFT.SyncCheck.SummaryOk": "Sync Check: all {count} checked users are in sync.",
+  "NFT.SyncCheck.SummaryPrefix": "Sync Check:",
+  "NFT.SyncCheck.SummaryDrift": "Out of sync: {names}.",
+  "NFT.SyncCheck.SummaryNoAnswer": "No answer: {names}.",
+  "NFT.SyncCheck.SummaryError": "Check failed: {names}."
 }
