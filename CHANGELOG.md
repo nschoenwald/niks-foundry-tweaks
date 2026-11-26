@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.19.1] - 2026-11-26
+### Fixed
+- **Settings Dashboard**: The dashboard opens again. In 14.19.0 it failed to open with an error about a "target field".
+
 ## [14.19.0] - 2026-11-26
 ### Changed
 - **Settings Dashboard**: Redesigned to list each feature once. Every feature is one row with a short summary and its on/off switch; click its name to see the full description, its options, and the choices each player makes for their own screen. The long list of sub-options and the separate Personal Preferences and Overview tabs are gone, so there is much less to scroll through. Search still finds options inside a feature and opens it. Each category shows how many of its features are on, and a note at the top points to what is new.
