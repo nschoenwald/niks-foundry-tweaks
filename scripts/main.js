@@ -80,20 +80,12 @@ Hooks.once("init", () => {
         restricted: false
     });
 
-    // Dashboard view state: the version of each module this user last opened it in ("New" badges) and the
-    // description length.
+    // Dashboard view state: the version of each module this user last opened it in ("New" badges).
     game.settings.register(MODULE_ID, "dashboardLastSeen", {
         scope: "client",
         config: false,
         type: Object,
         default: {}
-    });
-
-    game.settings.register(MODULE_ID, "dashboardFullHints", {
-        scope: "client",
-        config: false,
-        type: Boolean,
-        default: false
     });
 
     // Migration state (see migration.js)

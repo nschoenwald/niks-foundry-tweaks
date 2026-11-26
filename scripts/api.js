@@ -30,6 +30,11 @@
  * Setting entries of a schema can use `list: true` with `choicePicker: { getGroups, mode?, normalize?, noun?, resetTitle? }`
  * to pick entries from known options (API_VERSION 2, see `settings-choice-picker.js`).
  *
+ * The dashboard shows one row per feature: a top-level setting, with its `parentKey` children and the personal
+ * (client) settings linked to it by `pairedWith` folded underneath. A personal setting with neither a world setting
+ * nor a personal parent is a feature of its own; `homeTab: "<tab id>"` names the tab it is listed in (default: the
+ * first tab) (API_VERSION 5).
+ *
  * `teleportTargeting.isActive()` / `teleportTargeting.pickDestination({ sourceToken, itemName?, range?, checkCollision?,
  * customImg?, customImgScale? })`: the teleport HUD and ghost preview as a destination picker. Resolves
  * `{ x, y, rotation, distance, center }`, null when cancelled, or undefined when it couldn't start (API_VERSION 3,
@@ -45,6 +50,7 @@
  * @updated v14.7.0 (API_VERSION 2: `choicePicker` setting option)
  * @updated v14.9.0 (API_VERSION 3: `teleportTargeting` picker and extension)
  * @updated v14.17.0 (API_VERSION 4: `syncCheck`)
+ * @updated v14.19.0 (API_VERSION 5: feature-first dashboard, `homeTab` setting option)
  */
 import { createContext } from "./utils/create-context.js";
 import { attachHudPositioning } from "./utils/hud-position-helper.js";
@@ -57,7 +63,7 @@ import { isTeleportTargetingActive, pickTeleportDestination } from "./features/c
 import { checkSync, requestSyncCheck } from "./features/utilities/sync-check.js";
 
 /** Version of the add-on contract. */
-export const API_VERSION = 4;
+export const API_VERSION = 5;
 
 /**
  * Build the API object.

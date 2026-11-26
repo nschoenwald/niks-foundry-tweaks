@@ -5,20 +5,22 @@ import { NiksStatusPickerApp } from "./settings-status-picker.js";
 import { NiksChoicePickerApp } from "./settings-choice-picker.js";
 import { getAllSettings, getModule, getModuleIds, getTabs, getUnavailableWith, resolveSettingId } from "./settings-registry.js";
 
-const OVERVIEW_TAB = "overview";
 const PERSONAL_TAB = "personalPreferences";
 const DASHBOARD_ID = "niks-tweaks-settings-app";
+
+/** Section that collects a tab's personal-only features (client settings with no world setting behind them). */
+const PERSONAL_SECTION = { id: "justForYou", title: "Just for You" };
 
 /** Select values that mean a feature is switched off. */
 const OFF_VALUES = new Set(["none", "off", "never"]);
 
-/** Quick filters above the settings list. Counts are filled in live. */
+/** Quick filters above the feature list. Counts are filled in live; a filter without matches is hidden. */
 const FILTERS = [
-    { id: "changed", label: "Changed", icon: "fa-solid fa-pen", tooltip: "Settings that differ from their default value" },
-    { id: "new", label: "New", icon: "fa-solid fa-star", tooltip: "Settings added since you last opened this dashboard" },
-    { id: "off", label: "Turned Off", icon: "fa-solid fa-power-off", tooltip: "Features that are switched off" },
-    { id: "reload", label: "Needs Reload", icon: "fa-solid fa-rotate", tooltip: "Settings that take effect after reloading" },
-    { id: "unavailable", label: "Handled Elsewhere", icon: "fa-solid fa-ban", tooltip: "Settings another active module takes over" }
+    { id: "changed", label: "Changed", tooltip: "Features with an option that differs from its default" },
+    { id: "new", label: "New", tooltip: "Features with something added since you last opened this dashboard" },
+    { id: "off", label: "Turned Off", tooltip: "Features that are switched off" },
+    { id: "reload", label: "Needs Reload", tooltip: "Features with options that take effect after reloading" },
+    { id: "unavailable", label: "Handled Elsewhere", tooltip: "Features another active module takes over" }
 ];
 
 /**
@@ -101,7 +103,7 @@ function normalizeValue(setting, value) {
 }
 
 /**
- * First sentence of a hint, for the overview cards. Abbreviations like "e.g." don't end a sentence.
+ * First sentence of a hint, for the one-line summary on a feature row. Abbreviations like "e.g." don't end a sentence.
  * @param {string} hint
  */
 function summarize(hint = "") {
@@ -152,8 +154,11 @@ export function refreshSettingsMenuBadge(root) {
 
 /**
  * ApplicationV2 Settings Dashboard of Nik's Tweaks: core and every registered add-on in one window.
- * Provides categorized tabs, real-time search filtering, JSON import/export,
- * and permission-aware configuration for GMs and authorized players.
+ *
+ * Feature-first: each top-level world setting is one row (its switch on the row), with its sub-options and the
+ * players' personal choices (client settings linked by `pairedWith` / `parentKey`) folded into a panel below it.
+ * Client settings with no world setting behind them are features of their own ("Just for You"), placed in the tab
+ * their entry names with `homeTab` (default: the first tab). Players see only features they can change.
  */
 export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsApplicationMixin(
     foundry.applications.api.ApplicationV2
@@ -173,8 +178,8 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             resizable: true
         },
         position: {
-            width: 820,
-            height: 700
+            width: 940,
+            height: 760
         },
         actions: {
             resetDefaults: NiksTweaksSettingsApp.#onResetDefaults,
@@ -184,9 +189,11 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             editStatuses: NiksTweaksSettingsApp.#onEditChoices,
             editChoices: NiksTweaksSettingsApp.#onEditChoices,
             toggleFilter: NiksTweaksSettingsApp.#onToggleFilter,
+            toggleFeature: NiksTweaksSettingsApp.#onToggleFeature,
+            toggleMore: NiksTweaksSettingsApp.#onToggleMore,
             revealSetting: NiksTweaksSettingsApp.#onRevealSetting,
             resetSetting: NiksTweaksSettingsApp.#onResetSetting,
-            toggleHints: NiksTweaksSettingsApp.#onToggleHints,
+            resetFeature: NiksTweaksSettingsApp.#onResetFeature,
             close: function(event, target) { return this.close(); }
         }
     };
@@ -203,6 +210,9 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
      * Active tab tracking (client-side state during the session)
      */
     #activeTab = null;
+
+    /** Features the user opened, kept across re-renders. @type {Set<string>} */
+    #openFeatures = new Set();
 
     /**
      * Open list editor windows, keyed by setting key. Closed together with the dashboard.
@@ -240,6 +250,10 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
         // The form element survives re-renders, so its listeners are added once.
         this.element.addEventListener("change", () => this.#queueRefresh());
         this.element.addEventListener("input", () => this.#queueRefresh());
+        // Clicking anywhere else closes the More menu.
+        this.element.addEventListener("pointerdown", (event) => {
+            if (!event.target.closest(".nft-more-menu")) this.#setMoreMenu(false);
+        });
     }
 
     /* -------------------------------------------- */
@@ -250,7 +264,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
      * Open the dashboard, or bring it to the front, optionally at one setting.
      * Exposed as `game.modules.get("niks-foundry-tweaks").api.openSettings(key)`.
      * @param {object} [options]
-     * @param {string} [options.key]  Setting to scroll to and highlight.
+     * @param {string} [options.key]  Setting to scroll to and highlight (its feature opens).
      * @param {string} [options.tab]  Tab to open when no key is given.
      * @returns {Promise<NiksTweaksSettingsApp>}
      */
@@ -297,15 +311,23 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Whether a setting is shown to this user: its module requirement and condition hold, and players only get
-     * the Personal Preferences tab.
+     * Whether a setting exists in this world: its module requirement and condition hold.
+     * @param {object} setting
+     */
+    static #isAvailable(setting) {
+        if (setting.requiresModule && !game.modules.get(setting.requiresModule)?.active) return false;
+        if ((typeof setting.condition === "function") && !setting.condition()) return false;
+        return true;
+    }
+
+    /**
+     * Whether a setting is shown to this user: it is available, and players only get personal settings.
      * @param {object} setting
      * @param {string} tabId
      * @param {boolean} canModify
      */
     static #isVisible(setting, tabId, canModify) {
-        if (setting.requiresModule && !game.modules.get(setting.requiresModule)?.active) return false;
-        if ((typeof setting.condition === "function") && !setting.condition()) return false;
+        if (!NiksTweaksSettingsApp.#isAvailable(setting)) return false;
         return canModify || (tabId === PERSONAL_TAB);
     }
 
@@ -332,173 +354,238 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     /*  Context                                     */
     /* -------------------------------------------- */
 
+    /**
+     * Group the schema into features. A feature is a top-level setting outside Personal Preferences, or a
+     * personal setting that neither belongs to a world setting nor to another personal setting.
+     * @param {object[]} schema
+     * @returns {{features: Map<string, object>, order: object[]}}  Features by key, and the tabs → sections →
+     *   feature keys to show them in.
+     */
+    static #groupFeatures(schema) {
+        const all = schema.flatMap(tab => tab.sections.flatMap(sec => sec.settings.map(s => ({ s, tab, sec }))));
+        const byKey = new Map(all.map(e => [e.s.key, e]));
+        const features = new Map();
+        const order = schema.filter(t => t.id !== PERSONAL_TAB)
+            .map(tab => ({ tab, sections: tab.sections.map(sec => ({ sec, keys: [] })) }));
+
+        /** Top-level ancestor of an entry, following `parentKey`. */
+        const rootOf = (key) => {
+            let entry = byKey.get(key);
+            const seen = new Set();
+            while (entry?.s.parentKey && byKey.has(entry.s.parentKey) && !seen.has(entry.s.key)) {
+                seen.add(entry.s.key);
+                entry = byKey.get(entry.s.parentKey);
+            }
+            return entry;
+        };
+        const newFeature = (entry) => ({ setting: entry.s, tab: entry.tab, sec: entry.sec, options: [], personal: [] });
+
+        // World features and their options
+        for (const entry of all) {
+            if (entry.tab.id === PERSONAL_TAB) continue;
+            if (!entry.s.parentKey || !byKey.has(entry.s.parentKey)) {
+                features.set(entry.s.key, newFeature(entry));
+                order.find(o => o.tab === entry.tab).sections.find(o => o.sec === entry.sec).keys.push(entry.s.key);
+            }
+        }
+        for (const entry of all) {
+            if ((entry.tab.id === PERSONAL_TAB) || features.has(entry.s.key)) continue;
+            features.get(rootOf(entry.s.key)?.s.key)?.options.push(entry.s);
+        }
+
+        // Personal settings: into the feature of their world setting, or of their personal parent
+        const hostOf = (s, depth = 0) => {
+            if (depth > 10) return null;
+            const pair = s.pairedWith && byKey.get(s.pairedWith);
+            if (pair && (pair.tab.id !== PERSONAL_TAB)) return rootOf(pair.s.key)?.s.key ?? null;
+            if (s.parentKey && byKey.has(s.parentKey)) {
+                const parent = byKey.get(s.parentKey).s;
+                return features.has(parent.key) ? parent.key : hostOf(parent, depth + 1);
+            }
+            return null;
+        };
+        for (const entry of all) {
+            if (entry.tab.id !== PERSONAL_TAB) continue;
+            const host = hostOf(entry.s);
+            if (host && features.has(host)) {
+                features.get(host).personal.push(entry.s);
+                continue;
+            }
+            if (entry.s.parentKey && byKey.has(entry.s.parentKey)) continue; // parent wasn't placed: skip
+            // Personal-only feature: its own row in the tab it names, in a "Just for You" section
+            const feature = newFeature(entry);
+            feature.personalOnly = true;
+            features.set(entry.s.key, feature);
+            const home = order.find(o => o.tab.id === entry.s.homeTab) ?? order[0];
+            if (!home) continue;
+            let section = home.sections.find(o => o.sec.id === PERSONAL_SECTION.id);
+            if (!section) home.sections.push(section = { sec: PERSONAL_SECTION, keys: [] });
+            section.keys.push(entry.s.key);
+        }
+        // Children of personal-only features
+        for (const entry of all) {
+            if ((entry.tab.id !== PERSONAL_TAB) || !entry.s.parentKey) continue;
+            const root = rootOf(entry.s.key);
+            const feature = features.get(root?.s.key);
+            if (feature?.personalOnly && (root.s.key !== entry.s.key) && !feature.personal.includes(entry.s)) {
+                feature.personal.push(entry.s);
+            }
+        }
+        return { features, order };
+    }
+
     /** @override */
     async _prepareContext(options) {
         const canModify = game.user.can("SETTINGS_MODIFY");
-        if (!this.#activeTab) this.#activeTab = canModify ? OVERVIEW_TAB : PERSONAL_TAB;
         this.#baseline ??= NiksTweaksSettingsApp.#newBaselines();
         const baselines = this.#baseline;
 
         const schema = NiksTweaksSettingsApp.SETTINGS_SCHEMA;
         const all = schema.flatMap(tab => tab.sections.flatMap(sec => sec.settings));
         const byKey = new Map(all.map(s => [s.key, s]));
-        const clientFor = new Map(all.filter(s => s.pairedWith).map(s => [s.pairedWith, s.key]));
         this.#settingsByKey = byKey;
         this.#initialValues.clear();
 
-        const docsFor = (s) => {
-            if (s.parentKey) return null;
-            const docs = s.docs ?? byKey.get(s.pairedWith)?.docs;
-            const base = getModule(s.module)?.docsUrl;
-            return (docs && base) ? base + docs : null;
-        };
         const unavailableFor = (s) => {
             const mod = getUnavailableWith(s.unavailableWith);
             return mod?.isActive() ? mod : null;
         };
+        const docsFor = (s) => {
+            const docs = s.docs ?? byKey.get(s.pairedWith)?.docs;
+            const base = getModule(s.module)?.docsUrl;
+            return (docs && base) ? base + docs : null;
+        };
+        const depthOf = (s, rootKey) => {
+            let depth = 0;
+            let cur = s;
+            while (cur?.parentKey && (cur.parentKey !== rootKey) && byKey.has(cur.parentKey) && (depth < 5)) {
+                cur = byKey.get(cur.parentKey);
+                depth++;
+            }
+            return depth;
+        };
 
-        const whatsNew = [];
+        /** Template data of one setting's control. */
+        const entryFor = (s, rootKey) => {
+            const value = readSetting(s, s.default);
+            this.#initialValues.set(s.key, normalizeValue(s, value));
+            const isPersonal = (s.scope === "client") || (s.scope === "user");
+            const unavailableModule = unavailableFor(s);
+            const editable = canModify || isPersonal;
+            const pair = s.pairedWith ? byKey.get(s.pairedWith) : null;
+            return {
+                ...s,
+                value,
+                choices: s.type === "Select"
+                    ? (s.choices ?? []).map(c => ({ ...c, selected: c.value === value }))
+                    : [],
+                listCount: s.list ? parseListValue(value).length : 0,
+                depth: depthOf(s, rootKey),
+                // A personal choice that only works while its world setting is on
+                worldKey: (pair && (pair.scope === "world") && !s.overridesWorld) ? pair.key : null,
+                isNew: NiksTweaksSettingsApp.#isNew(s, baselines),
+                locked: !editable || Boolean(unavailableModule),
+                canReset: editable && !unavailableModule,
+                defaultLabel: ["FilePicker", "String"].includes(s.type) && !s.list ? "" : valueLabel(s, s.default),
+                searchText: [s.name, s.hint, s.settingKey, ...(s.keywords ?? [])].join(" ").toLowerCase()
+            };
+        };
 
-        // Settings tabs
-        const settingTabs = [];
-        for (const tab of schema) {
+        const { features, order } = NiksTweaksSettingsApp.#groupFeatures(schema);
+        let newCount = 0;
+        const tabs = [];
+        for (const { tab, sections: secOrder } of order) {
             const sections = [];
-            let newCount = 0;
-            for (const sec of tab.sections) {
-                const settings = [];
-                for (const s of sec.settings) {
-                    if (!NiksTweaksSettingsApp.#isVisible(s, tab.id, canModify)) continue;
-                    const value = readSetting(s, s.default);
-                    this.#initialValues.set(s.key, normalizeValue(s, value));
-
+            const alsoActive = [];
+            let tabNew = 0;
+            for (const { sec, keys } of secOrder) {
+                const list = [];
+                for (const key of keys) {
+                    const f = features.get(key);
+                    const s = f.setting;
+                    if (!NiksTweaksSettingsApp.#isAvailable(s)) continue;
                     const unavailableModule = unavailableFor(s);
-                    const isClient = s.scope === "client";
-                    const isUser = s.scope === "user";
-                    const isNew = NiksTweaksSettingsApp.#isNew(s, baselines);
-                    // A personal opt-out that came with a new world setting isn't listed twice in "New since".
-                    const pairIsNew = isClient && canModify && s.pairedWith
-                        && NiksTweaksSettingsApp.#isNew(byKey.get(s.pairedWith), baselines);
-                    if (isNew) newCount++;
-                    if (isNew && !pairIsNew) {
-                        const parent = s.parentKey ? byKey.get(s.parentKey) : null;
-                        whatsNew.push({
-                            key: s.key,
-                            label: parent ? `${parent.name}: ${s.name}` : s.name,
-                            where: `${tab.label} › ${sec.title}`,
-                            introduced: s.introduced
-                        });
-                    }
-                    const keywords = [...(s.keywords ?? []), ...(byKey.get(s.pairedWith)?.keywords ?? [])];
-                    const editable = canModify || isClient || isUser;
+                    const personal = f.personal.filter(p => NiksTweaksSettingsApp.#isAvailable(p));
+                    const options = f.options.filter(o => NiksTweaksSettingsApp.#isAvailable(o));
+                    const worldOn = !isOffValue(s, readSetting(s, s.default)) && !unavailableModule;
 
-                    const sourceModule = s.module === MODULE_ID ? null : getModule(s.module);
-                    settings.push({
-                        ...s,
-                        value,
-                        moduleBadge: sourceModule?.badge ?? "",
-                        moduleTitle: sourceModule?.title ?? "",
-                        choices: s.type === "Select"
-                            ? (s.choices ?? []).map(c => ({ ...c, selected: c.value === value }))
-                            : [],
+                    // The personal choice that turns the whole feature off for this user
+                    const primary = personal.find(p => (p.pairedWith === s.key) && !p.parentKey) ?? null;
+
+                    let row;
+                    let shownOptions;
+                    let shownPersonal;
+                    if (canModify || f.personalOnly) {
+                        row = s;
+                        shownOptions = canModify ? options : [];
+                        shownPersonal = personal;
+                    } else {
+                        // Players: only features they can change, and only while the GM has them on
+                        // (or the personal choice can override an off world setting)
+                        if (!personal.length) {
+                            if (worldOn && (s.scope === "world")) alsoActive.push({ name: s.name, summary: summarize(s.hint) });
+                            continue;
+                        }
+                        if (!worldOn && !personal.some(p => p.overridesWorld)) continue;
+                        row = primary;
+                        shownOptions = [];
+                        shownPersonal = personal.filter(p => p !== primary);
+                    }
+
+                    const rowEntry = row ? entryFor(row, s.key) : null;
+                    const optionEntries = shownOptions.map(o => entryFor(o, s.key));
+                    const personalEntries = shownPersonal.map(p => entryFor(p, s.key));
+                    const every = [rowEntry, ...optionEntries, ...personalEntries].filter(Boolean);
+                    const isNew = every.some(e => e.isNew);
+                    if (isNew) {
+                        tabNew++;
+                        newCount++;
+                    }
+                    const sourceModule = getModule(s.module);
+                    list.push({
+                        key: s.key,
+                        name: s.name,
+                        hint: s.hint ?? "",
+                        summary: summarize(s.hint),
+                        row: rowEntry,
+                        primaryKey: (canModify && primary) ? primary.key : null,
+                        options: optionEntries,
+                        personal: personalEntries,
+                        optionCount: optionEntries.length + personalEntries.length,
+                        personalOnly: Boolean(f.personalOnly),
+                        isNew,
+                        requiresReload: every.some(e => e.requiresReload),
                         unavailable: Boolean(unavailableModule),
                         unavailableLabel: unavailableModule?.label ?? "",
                         unavailableReason: unavailableModule
-                            ? `Not available while ${unavailableModule.label} is active. It handles this itself, so this setting has no effect. Your choice is kept for when ${unavailableModule.label} is turned off.`
+                            ? `${unavailableModule.label} is active and does this itself, so this feature is paused. Your choices are kept for when ${unavailableModule.label} is turned off.`
                             : "",
-                        listCount: s.list ? parseListValue(value).length : 0,
-                        isChild: Boolean(s.parentKey),
-                        isClient,
-                        isUser,
-                        isNew,
-                        locked: !editable,
-                        canReset: editable && !unavailableModule,
-                        defaultLabel: ["FilePicker", "String"].includes(s.type) && !s.list ? "" : valueLabel(s, s.default),
                         docsUrl: docsFor(s),
-                        pairKey: s.pairedWith ?? clientFor.get(s.key) ?? null,
-                        overridesWorld: Boolean(s.overridesWorld),
-                        searchText: [s.name, s.hint, tab.label, sec.title, s.settingKey, ...keywords].join(" ").toLowerCase()
+                        moduleTitle: getModuleIds().length > 1 ? (sourceModule?.title ?? "") : "",
+                        canReset: every.some(e => e.canReset),
+                        open: this.#openFeatures.has(s.key),
+                        searchText: [tab.label, sec.title, ...every.map(e => e.searchText)].join(" ")
                     });
                 }
-                if (settings.length) sections.push({ ...sec, settings });
+                if (list.length) sections.push({ id: sec.id, title: sec.title, icon: sec.icon, features: list });
             }
-            if (sections.length) settingTabs.push({ ...tab, sections, newCount });
+            if (sections.length || alsoActive.length) {
+                tabs.push({ id: tab.id, label: tab.label, icon: tab.icon, sections, alsoActive, newCount: tabNew });
+            }
         }
 
-        // Overview: one card per feature (top-level world settings)
-        const groups = [];
-        for (const tab of schema) {
-            if (tab.id === PERSONAL_TAB) continue;
-            const features = [];
-            for (const sec of tab.sections) {
-                for (const s of sec.settings) {
-                    if (s.parentKey) continue;
-                    if (!((s.scope === "world") || (canModify && (s.scope === "user")))) continue;
-                    if (!NiksTweaksSettingsApp.#isVisible(s, tab.id, true)) continue;
-                    const value = readSetting(s, s.default);
-                    const unavailableModule = unavailableFor(s);
-                    const on = !isOffValue(s, value);
-                    const clientKey = clientFor.get(s.key);
-                    features.push({
-                        key: s.key,
-                        name: s.name,
-                        summary: summarize(s.hint),
-                        on,
-                        valueLabel: valueLabel(s, value),
-                        isNew: NiksTweaksSettingsApp.#isNew(s, baselines),
-                        unavailable: Boolean(unavailableModule),
-                        unavailableLabel: unavailableModule?.label ?? "",
-                        canToggle: canModify && (s.type === "Boolean") && !unavailableModule,
-                        canReveal: canModify,
-                        clientKey: clientKey && byKey.has(clientKey) ? clientKey : null,
-                        docsUrl: docsFor(s)
-                    });
-                }
-            }
-            // Players see what is active in this world; the rest is only counted.
-            const shown = canModify ? features : features.filter(f => f.on && !f.unavailable);
-            if (!features.length) continue;
-            groups.push({
-                id: tab.id,
-                label: tab.label,
-                icon: tab.icon,
-                features: shown,
-                onCount: features.filter(f => f.on && !f.unavailable).length,
-                total: features.length,
-                hiddenCount: features.length - shown.length
-            });
+        // Players land on the first tab with something to change
+        if (!this.#activeTab || !tabs.some(t => t.id === this.#activeTab)) {
+            this.#activeTab = (tabs.find(t => t.sections.length) ?? tabs[0])?.id ?? null;
         }
-
-        const overviewTab = {
-            id: OVERVIEW_TAB,
-            label: canModify ? "Overview" : "Active in This World",
-            icon: "fa-solid fa-table-cells-large",
-            newCount: 0
-        };
-        const personal = settingTabs.find(t => t.id === PERSONAL_TAB);
-        const others = settingTabs.filter(t => t.id !== PERSONAL_TAB);
-        const navTabs = (canModify ? [overviewTab, ...others, personal] : [personal, overviewTab])
-            .filter(Boolean)
-            .map(t => ({ id: t.id, label: t.label, icon: t.icon, newCount: t.newCount, active: t.id === this.#activeTab }));
+        for (const t of tabs) t.active = (t.id === this.#activeTab);
 
         return {
             canModify,
-            fullHints: Boolean(readOwn("dashboardFullHints", false)),
             filters: FILTERS,
-            navTabs,
-            // Same order as the navigation, so search results read top to bottom like the tabs.
-            tabs: (canModify ? [...others, personal] : [personal])
-                .filter(Boolean)
-                .map(t => ({ ...t, active: t.id === this.#activeTab })),
-            overview: {
-                active: this.#activeTab === OVERVIEW_TAB,
-                label: overviewTab.label,
-                description: canModify
-                    ? "Every feature at a glance. Switch features on or off here, click a name to see all its options, or search above."
-                    : "Features your GM has turned on in this world. Click \"Your choice\" to turn one off for yourself.",
-                groups
-            },
-            whatsNew: whatsNew.slice(0, 12),
-            whatsNewMore: Math.max(0, whatsNew.length - 12)
+            navTabs: tabs.map(t => ({ id: t.id, label: t.label, icon: t.icon, newCount: t.newCount, active: t.active })),
+            tabs,
+            newCount
         };
     }
 
@@ -534,8 +621,8 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             searchInput.addEventListener("keydown", (event) => {
                 if (event.key === "Enter") {
                     event.preventDefault();
-                    const first = html.querySelector(".nft-tab-panel.active .nft-setting-row:not(.nft-row-hidden)");
-                    if (first) this.revealSetting(first.dataset.key);
+                    const first = html.querySelector(".nft-tab-panel.active .nft-feature:not(.nft-row-hidden)");
+                    if (first) this.revealSetting(first.dataset.feature);
                 } else if ((event.key === "Escape") && (this.#query || this.#filters.size)) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -547,27 +634,6 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             btn.addEventListener("click", () => {
                 this.#clearFilters();
                 searchInput?.focus();
-            });
-        }
-
-        // Parent-child toggles
-        for (const ctrl of html.querySelectorAll(".nft-setting-row:not(.nft-child-setting) :is(input[type='checkbox'], select)")) {
-            ctrl.addEventListener("change", () => this.#updateChildSettingStates());
-        }
-        this.#updateChildSettingStates();
-
-        // Hints: click to expand a shortened description
-        for (const hint of html.querySelectorAll(".nft-setting-hint")) {
-            hint.addEventListener("click", () => hint.closest(".nft-setting-row")?.classList.toggle("nft-hint-open"));
-        }
-
-        // Overview switches mirror the setting's own checkbox
-        for (const proxy of html.querySelectorAll(".nft-feature-proxy")) {
-            proxy.addEventListener("change", () => {
-                const real = html.querySelector(`.nft-setting-row[data-key="${proxy.dataset.proxyFor}"] input[type="checkbox"]`);
-                if (!real || real.disabled) return;
-                real.checked = proxy.checked;
-                real.dispatchEvent(new Event("change", { bubbles: true }));
             });
         }
 
@@ -599,6 +665,14 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
                 if (/^#[0-9a-fA-F]{6}$/.test(v)) colorInput.value = v;
             });
         }
+
+        // More menu: Escape closes it
+        html.querySelector(".nft-more-pop")?.addEventListener("keydown", (event) => {
+            if (event.key !== "Escape") return;
+            event.stopPropagation();
+            this.#setMoreMenu(false);
+            html.querySelector(".nft-more-toggle")?.focus();
+        });
 
         // JSON import
         html.querySelector(".nft-file-import-input")?.addEventListener("change", (e) => this.#onFileSelected(e));
@@ -648,7 +722,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /* -------------------------------------------- */
-    /*  Tabs, reveal                                */
+    /*  Tabs, features, reveal                      */
     /* -------------------------------------------- */
 
     /**
@@ -664,27 +738,57 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Clear search and filters, open the tab of a setting, scroll to it and highlight it.
-     * @param {string} key
+     * Open or close a feature's panel.
+     * @param {HTMLElement} article  The feature's element.
+     * @param {boolean} open
+     */
+    #setFeatureOpen(article, open) {
+        const key = article.dataset.feature;
+        if (open) this.#openFeatures.add(key);
+        else this.#openFeatures.delete(key);
+        article.classList.toggle("nft-open", open);
+        article.querySelector(".nft-feature-toggle")?.setAttribute("aria-expanded", String(open || article.classList.contains("nft-search-open")));
+    }
+
+    /**
+     * Clear search and filters, open the tab and feature of a setting, scroll to it and highlight it.
+     * @param {string} key  A setting key, or a feature's key.
      * @returns {boolean}  Whether the setting is in this window.
      */
     revealSetting(key) {
         key = resolveSettingId(key, MODULE_ID) ?? key;
         const html = this.element;
-        const row = html?.querySelector(`.nft-setting-row[data-key="${key}"]`);
-        if (!row) {
+        const target = html?.querySelector(`.nft-setting[data-key="${key}"]`)
+            ?? html?.querySelector(`.nft-feature[data-feature="${key}"]`);
+        const article = target?.closest(".nft-feature");
+        if (!article) {
             ui.notifications.warn("That setting isn't available to you here.");
             return false;
         }
         this.#clearFilters();
-        this.#activateTab(row.closest(".nft-tab-panel")?.dataset.tab);
-        row.scrollIntoView({ block: "center" });
-        row.classList.remove("nft-flash");
-        void row.offsetWidth; // restart the animation
-        row.classList.add("nft-flash");
-        row.querySelector(".nft-setting-control :is(input:not([type='hidden']), select, button):not(:disabled)")
-            ?.focus({ preventScroll: true });
+        this.#activateTab(article.closest(".nft-tab-panel")?.dataset.tab);
+        this.#setFeatureOpen(article, true);
+        const flash = target.classList.contains("nft-option") ? target : article;
+        flash.scrollIntoView({ block: "center" });
+        flash.classList.remove("nft-flash");
+        void flash.offsetWidth; // restart the animation
+        flash.classList.add("nft-flash");
+        const control = target.classList.contains("nft-setting")
+            ? target.querySelector(":is(input:not([type='hidden']), select, button:not(.nft-row-reset)):not(:disabled)")
+            : article.querySelector(".nft-feature-toggle");
+        control?.focus({ preventScroll: true });
         return true;
+    }
+
+    /**
+     * @param {boolean} open
+     */
+    #setMoreMenu(open) {
+        const pop = this.element?.querySelector(".nft-more-pop");
+        if (!pop) return;
+        pop.hidden = !open;
+        this.element.querySelector(".nft-more-toggle")?.setAttribute("aria-expanded", String(open));
+        if (open) pop.querySelector("button:not(:disabled)")?.focus();
     }
 
     /* -------------------------------------------- */
@@ -692,12 +796,12 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     /* -------------------------------------------- */
 
     /**
-     * Current form value of a setting row, or the stored value when the row isn't rendered.
+     * Current form value of a setting, or the stored value when it isn't in the form.
      * @param {string} key
      */
     #currentValue(key) {
         const setting = this.#settingsByKey.get(key);
-        const control = this.element?.querySelector(`.nft-setting-row[data-key="${key}"] [name="${key}"]`);
+        const control = this.element?.querySelector(`.nft-setting[data-key="${key}"] [name="${key}"]`);
         if (!setting || !control) return setting ? readSetting(setting, setting.default) : undefined;
         if (setting.type === "Boolean") return control.checked;
         if (setting.type === "Number") return Number(control.value);
@@ -705,14 +809,14 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Put a value into a setting row's control and announce the change.
-     * @param {HTMLElement} row
+     * Put a value into a setting's control and announce the change.
+     * @param {HTMLElement} row  The setting's `.nft-setting` element.
      * @param {object} setting
      * @param {*} value
      */
     #writeControl(row, setting, value) {
         const control = row.querySelector(`[name="${setting.key}"]`);
-        if (!control) return;
+        if (!control || control.disabled) return;
         if (setting.type === "Boolean") control.checked = Boolean(value);
         else control.value = value;
         if (setting.type === "Color") {
@@ -722,6 +826,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
         if (setting.list) {
             const label = row.querySelector(".nft-list-count");
             if (label) label.textContent = parseListValue(String(value)).length;
+            row.querySelector(".nft-list-edit-btn")?.classList.add("nft-list-modified");
         }
         control.dispatchEvent(new Event("change", { bubbles: true }));
     }
@@ -746,15 +851,16 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Update everything that depends on the current form values: changed / unsaved markers, linked
-     * world and personal settings, overview cards, filter counts and the Save button.
+     * Update everything that depends on the current form values: locked options, changed / unsaved markers,
+     * on / off state of features, tab counts, filter counts and the Save button.
      */
     #refreshRowStates() {
         const html = this.element;
         if (!html) return;
+        this.#updateDependentStates();
         let pending = 0;
 
-        for (const row of html.querySelectorAll(".nft-setting-row[data-key]")) {
+        for (const row of html.querySelectorAll(".nft-setting[data-key]")) {
             const setting = this.#settingsByKey.get(row.dataset.key);
             if (!setting) continue;
             const current = normalizeValue(setting, this.#currentValue(setting.key));
@@ -763,50 +869,41 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
             if (dirty) pending++;
             row.classList.toggle("nft-modified", modified);
             row.classList.toggle("nft-dirty", dirty);
-            row.dataset.off = String(!setting.parentKey && isOffValue(setting, current));
         }
 
-        // Linked world / personal settings
-        for (const chip of html.querySelectorAll(".nft-pair-chip[data-pair]")) {
-            const pair = this.#settingsByKey.get(chip.dataset.pair);
-            if (!pair) continue;
-            const value = this.#currentValue(pair.key);
-            const off = isOffValue(pair, value);
-            const label = chip.querySelector(".nft-pair-value");
-            if (label) label.textContent = valueLabel(pair, value);
-            chip.classList.toggle("off", off);
-            const row = chip.closest(".nft-setting-row");
-            // A personal setting that can override the world setting still works while the world setting is off
-            const own = row ? this.#settingsByKey.get(row.dataset.key) : null;
-            if (row && (pair.scope === "world")) row.classList.toggle("nft-world-off", off && !own?.overridesWorld);
+        for (const article of html.querySelectorAll(".nft-feature")) {
+            const rowKey = article.dataset.rowKey;
+            const rowSetting = rowKey ? this.#settingsByKey.get(rowKey) : null;
+            const off = rowSetting ? isOffValue(rowSetting, this.#currentValue(rowKey)) : false;
+            article.dataset.off = String(off);
+            article.classList.toggle("nft-off", off);
+            article.classList.toggle("nft-modified", Boolean(article.querySelector(".nft-setting.nft-modified")));
+            article.classList.toggle("nft-dirty", Boolean(article.querySelector(".nft-setting.nft-dirty")));
+
+            // GM: their own personal choice turned the feature off on their screen
+            const primary = article.dataset.primary ? this.#settingsByKey.get(article.dataset.primary) : null;
+            const personalOff = Boolean(primary) && !off && isOffValue(primary, this.#currentValue(primary.key));
+            const tag = article.querySelector(".nft-badge.personal-off");
+            if (tag) tag.hidden = !personalOff;
         }
 
-        // Overview cards
-        for (const card of html.querySelectorAll(".nft-feature-card[data-key]")) {
-            const setting = this.#settingsByKey.get(card.dataset.key);
-            if (!setting) continue;
-            const value = this.#currentValue(setting.key);
-            const off = isOffValue(setting, value);
-            card.classList.toggle("off", off);
-            const proxy = card.querySelector(".nft-feature-proxy");
-            if (proxy) proxy.checked = !off;
-            const valueEl = card.querySelector(".nft-feature-value");
-            if (valueEl) valueEl.textContent = valueLabel(setting, value);
-            const dirty = this.#initialValues.has(setting.key)
-                && (normalizeValue(setting, value) !== this.#initialValues.get(setting.key));
-            card.classList.toggle("nft-dirty", dirty);
-        }
-        for (const group of html.querySelectorAll(".nft-overview-group")) {
-            const count = group.querySelector(".nft-group-on");
-            if (count) count.textContent = group.querySelectorAll(".nft-feature-card:not(.off):not(.unavailable)").length;
+        // Tabs: how many features are on
+        for (const panel of html.querySelectorAll(".nft-tab-panel")) {
+            const articles = panel.querySelectorAll(".nft-feature");
+            const on = panel.querySelectorAll(".nft-feature[data-off='false']:not(.nft-unavailable)").length;
+            const count = html.querySelector(`[data-tab-count="${panel.dataset.tab}"]`);
+            if (count) {
+                count.textContent = articles.length ? `${on}/${articles.length}` : "";
+                count.dataset.tooltipText = `${on} of ${articles.length} features on`;
+            }
         }
 
         // Filter counts
         for (const chip of html.querySelectorAll(".nft-filter-chip")) {
             const id = chip.dataset.filter;
             let count = 0;
-            for (const row of html.querySelectorAll(".nft-setting-row[data-key]")) {
-                if (this.#rowMatchesFilter(row, id)) count++;
+            for (const article of html.querySelectorAll(".nft-feature")) {
+                if (this.#featureMatchesFilter(article, id)) count++;
             }
             chip.querySelector(".nft-filter-count").textContent = count;
             chip.hidden = !count && !this.#filters.has(id);
@@ -825,6 +922,36 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
         }
     }
 
+    /**
+     * Lock options whose parent setting is off, and dim personal choices whose world setting is off.
+     * Disabled controls aren't submitted, so their stored values stay as they are.
+     */
+    #updateDependentStates() {
+        const html = this.element;
+        const canModify = game.user.can("SETTINGS_MODIFY");
+        const isOn = (key) => {
+            const setting = this.#settingsByKey.get(key);
+            return setting ? !isOffValue(setting, this.#currentValue(key)) : true;
+        };
+
+        for (const row of html.querySelectorAll(".nft-option")) {
+            const article = row.closest(".nft-feature");
+            const parentOn = !row.dataset.parent || isOn(row.dataset.parent);
+            const personal = (row.dataset.scope === "client") || (row.dataset.scope === "user");
+            const editable = (canModify || personal) && !article?.classList.contains("nft-unavailable");
+            row.classList.toggle("nft-parent-disabled", !parentOn);
+            for (const ctrl of row.querySelectorAll(".nft-setting-control :is(input, select, button)")) {
+                ctrl.disabled = !parentOn || !editable;
+            }
+            row.classList.toggle("nft-world-off", Boolean(row.dataset.world) && !isOn(row.dataset.world));
+        }
+        // The world group says why its options are locked
+        for (const group of html.querySelectorAll(".nft-option-group[data-group='world']")) {
+            const rowKey = group.closest(".nft-feature")?.dataset.rowKey;
+            group.classList.toggle("nft-group-off", Boolean(rowKey) && !isOn(rowKey));
+        }
+    }
+
     /* -------------------------------------------- */
     /*  Search and filters                          */
     /* -------------------------------------------- */
@@ -834,16 +961,16 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * @param {HTMLElement} row
+     * @param {HTMLElement} article  A feature's element.
      * @param {string} filter
      */
-    #rowMatchesFilter(row, filter) {
+    #featureMatchesFilter(article, filter) {
         switch (filter) {
-            case "changed": return row.classList.contains("nft-modified");
-            case "new": return row.dataset.new === "true";
-            case "off": return row.dataset.off === "true";
-            case "reload": return row.dataset.reload === "true";
-            case "unavailable": return row.classList.contains("nft-unavailable");
+            case "changed": return article.classList.contains("nft-modified");
+            case "new": return article.dataset.new === "true";
+            case "off": return article.dataset.off === "true";
+            case "reload": return article.dataset.reload === "true";
+            case "unavailable": return article.classList.contains("nft-unavailable");
             default: return true;
         }
     }
@@ -857,8 +984,9 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Show the settings that match every search word (in any order, also in keywords) and every active filter,
-     * across all tabs, with the matches highlighted.
+     * Show the features that match every search word (in the feature or any of its options, in any order, also in
+     * keywords) and every active filter, across all tabs. A match inside an option opens the feature and marks
+     * the option.
      */
     #applyFilters() {
         const html = this.element;
@@ -869,37 +997,43 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
 
         const matchesByTab = {};
         let total = 0;
-        for (const row of html.querySelectorAll(".nft-setting-row[data-key]")) {
-            const text = row.dataset.searchText ?? "";
+        for (const article of html.querySelectorAll(".nft-feature")) {
+            const text = article.dataset.searchText ?? "";
             const visible = !filtering || (tokens.every(t => text.includes(t))
-                && [...this.#filters].every(f => this.#rowMatchesFilter(row, f)));
-            row.classList.toggle("nft-row-hidden", !visible);
+                && [...this.#filters].every(f => this.#featureMatchesFilter(article, f)));
+            article.classList.toggle("nft-row-hidden", !visible);
             if (filtering && visible) {
                 total++;
-                const tabId = row.closest(".nft-tab-panel")?.dataset.tab;
+                const tabId = article.closest(".nft-tab-panel")?.dataset.tab;
                 if (tabId) matchesByTab[tabId] = (matchesByTab[tabId] ?? 0) + 1;
             }
 
-            // Highlight the words in the name and description; open descriptions that contain a match.
-            let hintMatch = false;
-            for (const el of row.querySelectorAll(".nft-setting-name, .nft-setting-hint")) {
-                el.dataset.plain ??= el.textContent;
-                const shownTokens = visible ? tokens : [];
-                if (shownTokens.length) {
-                    el.innerHTML = highlightText(el.dataset.plain, shownTokens);
-                    if (el.classList.contains("nft-setting-hint")) {
-                        const plain = el.dataset.plain.toLowerCase();
-                        hintMatch = shownTokens.some(t => plain.includes(t));
-                    }
-                } else if (el.querySelector("mark")) {
-                    el.textContent = el.dataset.plain;
-                }
+            // Options that contain a search word open the feature
+            const shownTokens = visible ? tokens : [];
+            let optionHit = false;
+            for (const option of article.querySelectorAll(".nft-option")) {
+                const hit = shownTokens.length > 0 && shownTokens.some(t => (option.dataset.searchText ?? "").includes(t));
+                option.classList.toggle("nft-hit", hit);
+                optionHit ||= hit;
             }
-            row.classList.toggle("nft-hint-match", hintMatch);
+            const hintEl = article.querySelector(".nft-feature-hint");
+            const hintHit = shownTokens.length > 0 && Boolean(hintEl)
+                && shownTokens.some(t => hintEl.textContent.toLowerCase().includes(t))
+                && !shownTokens.some(t => article.querySelector(".nft-feature-name").textContent.toLowerCase().includes(t));
+            article.classList.toggle("nft-search-open", optionHit || hintHit);
+            article.querySelector(".nft-feature-toggle")?.setAttribute("aria-expanded",
+                String(article.classList.contains("nft-open") || optionHit || hintHit));
+
+            // Highlight the words
+            for (const el of article.querySelectorAll(".nft-feature-name, .nft-feature-summary, .nft-feature-hint, .nft-option-name, .nft-option-hint")) {
+                el.dataset.plain ??= el.textContent;
+                if (shownTokens.length) el.innerHTML = highlightText(el.dataset.plain, shownTokens);
+                else if (el.querySelector("mark")) el.textContent = el.dataset.plain;
+            }
         }
 
         for (const sec of html.querySelectorAll(".nft-section")) {
-            sec.classList.toggle("nft-row-hidden", !sec.querySelector(".nft-setting-row:not(.nft-row-hidden)"));
+            sec.classList.toggle("nft-row-hidden", !sec.querySelector(".nft-feature:not(.nft-row-hidden)"));
         }
         for (const panel of html.querySelectorAll(".nft-tab-panel")) {
             const id = panel.dataset.tab;
@@ -923,10 +1057,6 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
 
         const clear = html.querySelector(".nft-search-clear");
         if (clear) clear.hidden = !filtering;
-        const status = html.querySelector(".nft-search-status");
-        if (status) status.hidden = !filtering;
-        const countEl = html.querySelector(".nft-match-count");
-        if (countEl) countEl.textContent = total;
         const noResults = html.querySelector(".nft-no-results");
         if (noResults) noResults.hidden = !(filtering && !total);
     }
@@ -945,6 +1075,29 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
         if (this.#filters.has(id)) this.#filters.delete(id);
         else this.#filters.add(id);
         this.#applyFilters();
+        this.#refreshRowStates();
+    }
+
+    /**
+     * Open or close a feature's options.
+     * @this {NiksTweaksSettingsApp}
+     * @param {PointerEvent} event
+     * @param {HTMLElement} target
+     */
+    static #onToggleFeature(event, target) {
+        const article = target.closest(".nft-feature");
+        if (!article) return;
+        // While a search opened it, the first click closes it
+        const shown = article.classList.contains("nft-open") || article.classList.contains("nft-search-open");
+        article.classList.remove("nft-search-open");
+        this.#setFeatureOpen(article, !shown);
+    }
+
+    /**
+     * @this {NiksTweaksSettingsApp}
+     */
+    static #onToggleMore(event, target) {
+        this.#setMoreMenu(this.element.querySelector(".nft-more-pop")?.hidden ?? false);
     }
 
     /**
@@ -958,35 +1111,34 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
     }
 
     /**
-     * Put one setting back to its default value (stored on Save Changes).
+     * Put one setting back to its default value (stored on Save).
      * @this {NiksTweaksSettingsApp}
      * @param {PointerEvent} event
      * @param {HTMLElement} target
      */
     static #onResetSetting(event, target) {
         const setting = this.#settingsByKey.get(target.dataset.key);
-        const row = target.closest(".nft-setting-row");
+        const row = target.closest(".nft-setting");
         if (!setting || !row) return;
         this.#writeControl(row, setting, setting.default);
-        if (setting.list) row.querySelector(".nft-list-edit-btn")?.classList.add("nft-list-modified");
-        this.#updateChildSettingStates();
     }
 
     /**
-     * Switch between one-line and full descriptions. A personal view preference, stored right away.
+     * Put every setting this user can change in a feature back to its default (stored on Save).
      * @this {NiksTweaksSettingsApp}
      * @param {PointerEvent} event
      * @param {HTMLElement} target
      */
-    static async #onToggleHints(event, target) {
-        const full = !this.element.querySelector(".nft-dashboard-wrapper")?.classList.contains("nft-full-hints");
-        this.element.querySelector(".nft-dashboard-wrapper")?.classList.toggle("nft-full-hints", full);
-        target.setAttribute("aria-pressed", String(full));
-        const icon = target.querySelector("i");
-        if (icon) icon.className = `fa-solid ${full ? "fa-align-left" : "fa-grip-lines"}`;
-        const label = target.querySelector("span");
-        if (label) label.textContent = full ? "Full descriptions" : "Short descriptions";
-        await game.settings.set(MODULE_ID, "dashboardFullHints", full);
+    static #onResetFeature(event, target) {
+        const article = target.closest(".nft-feature");
+        if (!article) return;
+        // The feature's own switch first, so its options unlock before they are reset
+        const rows = [...article.querySelectorAll(".nft-setting[data-key]")];
+        for (const row of rows) {
+            const setting = this.#settingsByKey.get(row.dataset.key);
+            if (setting) this.#writeControl(row, setting, setting.default);
+            this.#updateDependentStates();
+        }
     }
 
     /**
@@ -1022,7 +1174,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
                 const label = target.querySelector(".nft-list-count");
                 if (label) label.textContent = count;
                 target.classList.add("nft-list-modified");
-                target.title = "Edited. Use Save Changes to store this list.";
+                target.title = "Edited. Use Save to store this list.";
                 this.#queueRefresh();
             }
         });
@@ -1061,7 +1213,7 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
                 const label = target.querySelector(".nft-list-count");
                 if (label) label.textContent = parseListValue(value).length;
                 target.classList.add("nft-list-modified");
-                target.title = "Edited. Use Save Changes to store this choice.";
+                target.title = "Edited. Use Save to store this choice.";
                 this.#queueRefresh();
             }
         };
@@ -1095,47 +1247,6 @@ export class NiksTweaksSettingsApp extends foundry.applications.api.HandlebarsAp
         picker.render({ force: true });
     }
 
-    /**
-     * Updates disabled states for child settings based on parent control status
-     */
-    #updateChildSettingStates() {
-        const html = this.element;
-        const childRows = html.querySelectorAll(".nft-setting-row[data-parent]");
-
-        childRows.forEach(row => {
-            const parentKey = row.dataset.parent;
-            const parentRow = html.querySelector(`.nft-setting-row[data-key="${parentKey}"]`);
-            const parentCheckbox = parentRow?.querySelector("input[type='checkbox']");
-            const parentSelect = parentRow?.querySelector("select");
-
-            let isParentActive = true;
-            if (parentCheckbox) {
-                isParentActive = parentCheckbox.checked;
-            } else if (parentSelect) {
-                isParentActive = parentSelect.value !== "none" && parentSelect.value !== "";
-            }
-
-            const controls = row.querySelectorAll("input, select, button");
-            if (!isParentActive) {
-                row.classList.add("nft-parent-disabled");
-                controls.forEach(ctrl => ctrl.setAttribute("disabled", "disabled"));
-            } else {
-                row.classList.remove("nft-parent-disabled");
-                // Check overall user permissions before re-enabling
-                const isClient = row.dataset.scope === "client" || row.querySelector(".nft-badge.client") !== null;
-                const isUser = row.dataset.scope === "user" || row.querySelector(".nft-badge.user") !== null;
-                if (game.user.can("SETTINGS_MODIFY") || isClient || isUser) {
-                    controls.forEach(ctrl => ctrl.removeAttribute("disabled"));
-                }
-            }
-        });
-
-        // Settings taken over by another module stay locked, whatever their parent says
-        html.querySelectorAll(".nft-setting-row.nft-unavailable").forEach(row => {
-            row.querySelectorAll(".nft-setting-control :is(input, select, button)")
-                .forEach(ctrl => ctrl.setAttribute("disabled", "disabled"));
-        });
-    }
 
     /**
      * Handles form submit and saving settings

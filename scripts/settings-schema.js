@@ -5,7 +5,7 @@
  * labels and order are the base that add-ons merge into: add-ons reuse these ids to put their settings in the same
  * places (e.g. "personalPreferences", "uiVisuals", "canvasTokens", "combatFlow", "utilities").
  *
- * Entry metadata as in the add-ons: `introduced`, `pairedWith`, `docs`, `keywords`, `parentKey`, `unavailableWith`,
+ * Entry metadata as in the add-ons: `introduced`, `pairedWith`, `docs`, `keywords`, `parentKey`, `homeTab`, `unavailableWith`,
  * `requiresModule`, `condition`, `list`, `statusPicker`, `choicePicker` (see `settings-choice-picker.js`).
  *
  * @introduced v14.0.0
@@ -173,6 +173,7 @@ export function getSettingsSchema() {
                         {
                             key: "enableToolbarLimitation",
                             introduced: "14.0.0",
+                            homeTab: "uiVisuals",
                             docs: "toolbar-limitation",
                             keywords: ["scene controls", "scroll"],
                             name: "Toolbar Limitation",

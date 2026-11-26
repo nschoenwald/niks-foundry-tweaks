@@ -9,7 +9,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 ---
 
 > [!TIP]
-> **Modular by Design**: Every tweak can be toggled independently. GMs configure world defaults, while players have their own **Personal Preferences** tab to adjust features for their own screen.
+> **Modular by Design**: Every tweak can be toggled independently. GMs configure world defaults, while players adjust features for their own screen right inside each feature (**On your screen**).
 
 > [!NOTE]
 > **Coming from Nik's DnD5e Tweaks?** These features used to be part of Nik's DnD5e Tweaks. From Nik's DnD5e Tweaks 14.70.0 on, they live here, and Nik's DnD5e Tweaks requires this module. Your settings are copied over automatically the first time the world loads with both modules, both the world settings and each player's personal ones.
@@ -70,7 +70,7 @@ Enlarges body text and adds space between lines, without making the rest of the 
 * **Covers**: journal pages (while reading and while editing). System modules extend it to their sheets, tooltips and chat cards; with [Nik's DnD5e Tweaks](https://github.com/nschoenwald/niks-dnd5e-tweaks), that is item descriptions, biographies, items expanded on a sheet and item tooltips. Headings scale along; buttons and the rest of the interface keep their size.
 * **Levels**: **Comfortable** (default, journals 14px → 16px), **Large** (journals 18px), or **Off** for the system's own sizes. Both still follow Foundry's Font Size setting.
 * **Chat Cards**: With a system module that supports it (such as Nik's DnD5e Tweaks), **Readable Text Size in Chat Cards** also enlarges descriptions inside chat cards (off by default, as it makes cards taller). Without one, the option is hidden.
-* **World Default & Personal Override**: The GM picks the size (and the chat card option) for everyone. Each player can override both under Personal Preferences; their default is **Use World Setting**.
+* **World Default & Personal Override**: The GM picks the size (and the chat card option) for everyone. Each player can override both for their own screen (**On your screen** in the feature); their default is **Use World Setting**.
 
 ### Sheet Pop-out Button
 Adds a dedicated **↗ pop-out button** to Actor and Item sheet window headers to detach them into separate browser windows with one click. Automatically hides when already detached.
@@ -127,7 +127,7 @@ Foundry's file picker shows every image at full size and lets the browser shrink
 
 - The first time an image appears, your browser downloads it once, shrinks it to a small thumbnail (256 px on the longest side) and keeps it in its own storage. From then on the picker shows the stored thumbnail: no download, almost nothing to decode, so folders open and scroll quickly.
 - Images load as they scroll into view, a few at a time. The large Images view, SVG icons and animated GIFs still use the original files.
-- Thumbnails are kept per browser, up to the **Thumbnail Storage Limit** under Personal Preferences (default 1,024 MB, roughly 50,000 to 100,000 thumbnails). When it is full, the thumbnails you haven't seen for the longest time are removed first. Thumbnails are also made again after 30 days. If you replace an image under the same name, choose **Refresh Thumbnails** in the picker's ⋮ menu to update the current folder right away.
+- Thumbnails are kept per browser, up to the **Thumbnail Storage Limit** (an *On your screen* option of the feature) (default 1,024 MB, roughly 50,000 to 100,000 thumbnails). When it is full, the thumbnails you haven't seen for the longest time are removed first. Thumbnails are also made again after 30 days. If you replace an image under the same name, choose **Refresh Thumbnails** in the picker's ⋮ menu to update the current folder right away.
 - Works with User Data, Core Data and Amazon S3. For S3, the bucket must allow cross-origin requests, which Foundry already needs for S3 images on the canvas. If a thumbnail can't be made, the picker shows the original image.
 
 The GM can turn the feature off; players can turn it off for themselves.
@@ -139,7 +139,7 @@ Dynamically updates the browser tab title with the name of the active scene bein
 Turns toolbars scrollable when button count exceeds a configured limit (default: 20), preventing overcrowded canvas controls. Layout is recalculated after the window has finished resizing.
 
 ### Clearer Scene Control Toggles
-Makes on/off toggles in the left scene controls toolbar (such as **Force Snap to Grid Vertices**, **Toggle Notes Display** or **Unconstrained Movement**) easy to tell apart at a glance. Toggles that are off look like normal buttons with a dimmed icon. Toggles that are on keep the normal background but show their icon at full strength, with an accent-colored ring and a small accent dot in the corner, The same applies to choice tools such as **Select** or **Draw Walls**: the selected tool gets the ring and a full-strength icon (no dot, so it never looks like a toggle), and the other choice tools are dimmed. Hovering a button no longer makes it look switched on or selected. One-click buttons such as **Clear** keep their usual look. Works with light and dark interface themes, and with **Carolingian UI**'s left controls, where it follows the active Carolingian color theme. Players can turn it off for themselves under Personal Preferences.
+Makes on/off toggles in the left scene controls toolbar (such as **Force Snap to Grid Vertices**, **Toggle Notes Display** or **Unconstrained Movement**) easy to tell apart at a glance. Toggles that are off look like normal buttons with a dimmed icon. Toggles that are on keep the normal background but show their icon at full strength, with an accent-colored ring and a small accent dot in the corner, The same applies to choice tools such as **Select** or **Draw Walls**: the selected tool gets the ring and a full-strength icon (no dot, so it never looks like a toggle), and the other choice tools are dimmed. Hovering a button no longer makes it look switched on or selected. One-click buttons such as **Clear** keep their usual look. Works with light and dark interface themes, and with **Carolingian UI**'s left controls, where it follows the active Carolingian color theme. Players can turn it off for themselves (**On your screen** in the feature).
 
 ### Carolingian UI Theme Harmony
 Adapts the Settings Dashboard and floating canvas banners to **Carolingian UI** color palettes, typography and top scene navigation offsets. System modules add their own parts (with Nik's DnD5e Tweaks: chat cards, template and summoning HUDs, and legendary action placeholders in the Combat Carousel).
@@ -214,28 +214,27 @@ Patches are zero-configuration, always-on fixes for confirmed upstream Foundry b
 
 All features of this module, and of system modules such as Nik's DnD5e Tweaks, are managed in one **Settings Dashboard**, opened from *Configure Settings → Nik's Foundry Tweaks → Configure Module*. When there are settings you haven't seen yet, that button shows how many.
 
-**Finding settings**
-* **Overview**: The first tab shows every feature as a card with a one-line summary, whether it is on, and a switch to turn it on or off. Click a feature's name to jump to all its options.
-* **Tabs**: Settings are grouped by topic (UI & Visuals, Canvas & Tokens, Combat Flow, Utilities & Debug, and Personal Preferences); system modules add their settings to the same tabs and can add tabs of their own. Settings from a system module carry a small badge (e.g. **5e**).
-* **Search**: Finds settings by name, description and related terms. Words can be in any order. Matches are highlighted and every tab with results shows how many it has. Press <kbd>Enter</kbd> to jump to the first one, <kbd>Esc</kbd> to clear the search.
-* **Quick filters**: Show only settings that are **Changed** from their default, **New** since you last opened the dashboard, **Turned Off**, that **Need a Reload**, or that are **Handled Elsewhere** by another module. Filters combine with each other and with the search.
-* **Short or full descriptions**: Descriptions take one line by default; click one to read it in full, or switch to full descriptions in the header.
-* **Docs**: The ⓘ next to a feature (and *Docs* on its card) opens its section of the module's README.
+**One row per feature**
+* **Feature list**: Each feature is one row with a one-line summary and its on/off switch (or its main choice). Click the name to open it: the full description, its **Options for everyone**, and **On your screen**, the choices each player makes for themselves. Options stay locked while the feature is off. A small count on the row tells how many options a feature has.
+* **Categories**: Features are grouped by topic (UI & Visuals, Canvas & Tokens, Combat Flow, Utilities & Debug); system modules add their features to the same categories and can add categories of their own. Each category shows how many of its features are on. The open feature panel says which module a feature comes from.
+* **Search**: Finds features by name, description and related terms, including the options inside them. Words can be in any order. Matches are highlighted, a match inside an option opens the feature and marks the option, and every category with results shows how many it has. Press <kbd>Enter</kbd> to open the first one, <kbd>Esc</kbd> to clear the search.
+* **Quick filters**: Show only features with something **Changed** from its default, something **New** since you last opened the dashboard, that are **Turned Off**, that **Need a Reload**, or that are **Handled Elsewhere** by another module. Filters combine with each other and with the search.
+* **Docs**: *Read the docs* in a feature's panel opens its section of the module's README.
 
 **Discovering features**
-* **New since you last looked**: The Overview lists settings added since you last opened the dashboard, they carry a **New** badge, and each tab shows how many new settings it holds.
-* **World and personal settings are linked**: A world setting that players can change for themselves shows *Personal: …* with your own choice; the personal setting shows *World: …* and is dimmed when the world setting is off, since it has no effect then. Personal settings that can override the world setting (Readable Text Size, with **Use World Setting**) are not dimmed. Click either to jump to the other.
-* **Deep links**: Macros and other modules can open the dashboard at a setting with `game.modules.get("niks-foundry-tweaks").api.openSettings("settingKey")`.
+* **New since you last looked**: A note at the top says how many features have something new, with a link that shows only them. Categories with something new get a dot, and new features and options carry a **New** badge.
+* **Your own choice**: When you turned a feature off for your own screen while it is on for everyone, its row says **Off for you**. Personal choices that only work while the GM has the feature on are dimmed when it is off. Choices that can override the GM (Readable Text Size, with **Use World Setting**) are not.
+* **Deep links**: Macros and other modules can open the dashboard at a setting with `game.modules.get("niks-foundry-tweaks").api.openSettings("settingKey")`. Its feature opens and the setting is highlighted.
 
 **Changing settings**
-* **Changed from default**: A dot after the name marks a setting that differs from its default; the ↺ button next to it puts it back.
-* **Unsaved changes**: Edited settings get a colored bar, and *Save Changes* shows how many are pending. Closing the dashboard with unsaved changes asks first.
+* **Changed from default**: A dot after the name marks a feature or option that differs from its default; the ↺ button next to an option puts it back, and *Reset this feature* in the panel resets the whole feature.
+* **Unsaved changes**: Edited settings get a colored bar, and *Save* shows how many are pending. Closing the dashboard with unsaved changes asks first.
 * **List settings**: Settings that hold a list of names (e.g. Auto-Apply Effects) open in their own editor, where you search, add and remove entries one by one. Some lists also offer a dropdown next to each entry (e.g. when Nik's DnD5e Tweaks removes an exception's template).
 * **World Settings (GMs & Authorized Users)**: Fully supports Foundry's **"Modify Configuration Settings" (`SETTINGS_MODIFY`)** permission, so Assistant GMs or trusted players with that permission can change world settings like a GM.
-* **Personal Preferences (All Players & GMs)**: Settings stored in your own browser. Players turn features on or off for their own screen without changing anything for others. For GMs this tab is at the bottom.
-* **Players**: Players without settings permission see their Personal Preferences first and an **Active in This World** tab that lists the features the GM turned on, each linked to their own choice. "Reset Defaults" resets only their personal settings.
-* **Unavailable Settings**: Settings for features that turn themselves off because another module handles the job are greyed out and locked, with a badge naming that module. Your stored choice is kept for when that module is turned off.
-* **Backup**: *Export JSON* saves the settings of every module in the dashboard to one file; *Import JSON* loads them into a world. Exports made with Nik's DnD5e Tweaks before 14.70.0 can be imported too: the settings that moved here are restored here.
+* **Personal choices (All Players & GMs)**: Stored in your own browser. They sit inside each feature under **On your screen**, so players turn features off (or adjust them) for their own screen without changing anything for others. A few features exist only per screen, such as Toolbar Limitation; they are listed under **Just for You** in their category.
+* **Players**: Players without settings permission see only the features they can change, each with their own switch on the row. Features the GM runs for everyone are listed at the end of each category under *Also active in this world*. *Reset my choices to defaults* resets only their personal settings.
+* **Unavailable Settings**: Features that turn themselves off because another module handles the job are greyed out and locked, with a badge naming that module. Your stored choices are kept for when that module is turned off.
+* **Backup**: *More → Export settings* saves the settings of every module in the dashboard to one file; *Import settings* loads them into a world. *Reset everything to defaults* is in the same menu. Exports made with Nik's DnD5e Tweaks before 14.70.0 can be imported too: the settings that moved here are restored here.
 
 ---
 
