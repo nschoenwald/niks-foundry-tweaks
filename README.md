@@ -55,6 +55,7 @@ System-independent quality-of-life tweaks for **Foundry VTT (v14)**, and the hom
 | **[Disable Underground Token Hiding](#disable-underground-token-hiding)** | Canvas & Tokens | ❌ Disabled | No |
 | **[Enhanced Teleport Targeting UI](#enhanced-teleport-targeting-ui-automated-animations-blfx)** | Canvas & Tokens | ✅ Enabled | Yes |
 | **[Fade Templates During Animations](#fade-templates-during-animations)** | Canvas & Tokens | ✅ Enabled | Yes |
+| **[Boss Loot FX Animation Opacity](#boss-loot-fx-animation-opacity)** | Canvas & Tokens | ❌ Disabled | No |
 | **[Auto-Add Tokens to Combat](#auto-add-tokens-to-combat)** | Combat Flow | ✅ Enabled | No |
 | **[Auto-Unpause When Logging In](#auto-unpause-when-logging-in)** | Utilities | ❌ Disabled | Yes (GM) |
 | **[Delayed Disconnect Warning](#delayed-disconnect-warning)** | Utilities | ✅ Enabled | Yes |
@@ -167,6 +168,9 @@ Improves teleport destination picking (*Misty Step*, *Dimension Door*) for Autom
 ### Fade Templates During Animations
 While a Sequencer animation (from Automated Animations, Boss Loot FX or any other module) plays on a template, the template's colored fill fades to a fraction of its normal opacity, so the fireball or breath weapon isn't hidden behind it. The fill fades back in when the last animation on it ends; looping animations (*Spirit Guardians*, *Wall of Fire*) keep it faded while they last. Set how visible the fill stays under *Fill Opacity During Animations* (default 25%, 0 hides it). Animations placed at a point instead of on the template don't count. Players can turn it off for themselves.
 
+### Boss Loot FX Animation Opacity
+Plays Boss Loot FX (BLFX) animations at a percentage of their normal opacity (default 75%), so tokens, templates and the map stay visible underneath. BLFX's own opacity values and fade-ins scale with it, and animations BLFX hides stay hidden. Only BLFX's own animation files are affected; Automated Animations, JB2A and other modules play as before. The caster's game sets the opacity for everyone, so it is a GM setting only. It applies to animations started after the change: looping animations already on the scene keep the opacity they started with. The setting only shows up while Boss Loot FX is active.
+
 ---
 
 ## 🏁 Combat Flow
@@ -270,7 +274,7 @@ Hooks.once("niksTweaks.register", (api) => {
 * **libWrapper**: All method and property overrides register cooperatively via `libWrapper` when installed, with a standalone fallback otherwise.
 * **Carolingian UI**: Automatic color theme adoption for the dashboard and canvas banners, and top navigation clearance.
 * **Automated Animations**: Ghost token preview (Dynamic Token Rings included) for teleport presets.
-* **Boss Loot FX (BLFX)**: The same teleport banner and ghost preview replace BLFX's destination crosshair.
+* **Boss Loot FX (BLFX)**: The same teleport banner and ghost preview replace BLFX's destination crosshair. Optional opacity for all BLFX animations.
 * **Sequencer**: Templates fade while a Sequencer animation plays on them.
 * **Nik's DnD5e Tweaks**: Requires this module from 14.70.0 on and adds its settings to the dashboard. With an older Nik's DnD5e Tweaks active, this module stays inactive (and tells the GM to update), so no feature runs twice.
 

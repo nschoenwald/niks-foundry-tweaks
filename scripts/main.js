@@ -28,6 +28,7 @@ import { initClearTargets, onClearTargetsSocket } from "./features/canvas-tokens
 import { initDisableUndergroundTokenHiding } from "./features/canvas-tokens/disable-underground-token-hiding.js";
 import { initAutoanimationsTeleportUI } from "./features/canvas-tokens/autoanimations-teleport-ui.js";
 import { initTemplateFadeDuringAnimations, updateTemplateFade } from "./features/canvas-tokens/template-fade-during-animations.js";
+import { initBlfxAnimationOpacity } from "./features/canvas-tokens/blfx-animation-opacity.js";
 import { initAutoAddTokensToCombat } from "./features/combat/auto-add-tokens-to-combat.js";
 
 // Utilities and patches
@@ -559,6 +560,26 @@ Hooks.once("init", () => {
         onChange: () => updateTemplateFade()
     });
 
+    game.settings.register(MODULE_ID, "enableBlfxAnimationOpacity", {
+        name: "Boss Loot FX Animation Opacity",
+        hint: "Plays Boss Loot FX (BLFX) animations at a set percentage of their normal opacity, so tokens and the map stay visible underneath. Applies to animations started after the change.",
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        restricted: true
+    });
+
+    game.settings.register(MODULE_ID, "blfxAnimationOpacity", {
+        name: "↳ Opacity (%)",
+        hint: "Opacity of Boss Loot FX animations as a percentage of their normal opacity (0 to 100).",
+        scope: "world",
+        config: false,
+        type: Number,
+        default: 75,
+        restricted: true
+    });
+
     game.settings.register(MODULE_ID, "enableClearTargetsButton", {
         name: "Clear Targets Token Control Button",
         hint: "Adds a button to the Token Controls toolbar that removes targets. For players, it removes their own targets; for GMs, it removes targets for both themselves and all connected players.",
@@ -686,6 +707,7 @@ Hooks.once("setup", () => {
     initAutoAddTokensToCombat();
     initAutoanimationsTeleportUI();
     initTemplateFadeDuringAnimations();
+    initBlfxAnimationOpacity();
     initClearTargets();
 
     // Utilities and fixes

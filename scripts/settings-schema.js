@@ -531,6 +531,29 @@ export function getSettingsSchema() {
                             default: 25,
                             scope: "world",
                             parentKey: "enableTemplateFadeDuringAnimations"
+                        },
+                        {
+                            key: "enableBlfxAnimationOpacity",
+                            introduced: "14.20.0",
+                            docs: "boss-loot-fx-animation-opacity",
+                            keywords: ["BLFX", "Boss Loot", "opacity", "transparent", "alpha", "Sequencer", "animation"],
+                            name: "Boss Loot FX Animation Opacity",
+                            hint: "Plays Boss Loot FX (BLFX) animations at a set percentage of their normal opacity, so tokens, templates and the map stay visible underneath. Applies to animations started after the change; looping animations already on the scene keep their opacity.",
+                            type: "Boolean",
+                            default: false,
+                            scope: "world",
+                            requiresModule: "boss-loot-assets-premium"
+                        },
+                        {
+                            key: "blfxAnimationOpacity",
+                            introduced: "14.20.0",
+                            name: "Opacity (%)",
+                            hint: "Opacity of Boss Loot FX animations as a percentage of their normal opacity (0 to 100, default 75). BLFX's own opacity and fade-ins scale with it.",
+                            type: "Number",
+                            default: 75,
+                            scope: "world",
+                            parentKey: "enableBlfxAnimationOpacity",
+                            requiresModule: "boss-loot-assets-premium"
                         }
                     ]
                 }

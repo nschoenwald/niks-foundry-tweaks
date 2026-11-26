@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.20.0] - 2026-11-26
+### Added
+- **Boss Loot FX Animation Opacity**: Plays Boss Loot FX animations at a percentage of their normal opacity (default 75%), so tokens, templates and the map stay visible underneath. Other animation modules aren't affected. Off by default.
+
 ## [14.19.2] - 2026-11-26
 ### Fixed
 - **Settings Dashboard with Carolingian UI**: Feature names, "Show it" and the reset links no longer look like grey buttons, and the option lists are as compact as without Carolingian UI. With Carolingian UI Theme Harmony on, the Save button takes the theme's highlight color.
