@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.19.2] - 2026-11-26
+### Fixed
+- **Settings Dashboard with Carolingian UI**: Feature names, "Show it" and the reset links no longer look like grey buttons, and the option lists are as compact as without Carolingian UI. With Carolingian UI Theme Harmony on, the Save button takes the theme's highlight color.
+
 ## [14.19.1] - 2026-11-26
 ### Fixed
 - **Settings Dashboard**: The dashboard opens again. In 14.19.0 it failed to open with an error about a "target field".
