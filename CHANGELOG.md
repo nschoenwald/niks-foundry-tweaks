@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.21.0] - 2026-11-26
+### Fixed
+- **Region Effects on Deleted Tokens**: Deleting an unlinked token (such as a slain enemy) that stands in a region applying an effect no longer shows the error "undefined id [...] does not exist in the EmbeddedCollection collection". Works in every game system; the D&D 5e version of the effect is fixed by Nik's DnD5e Tweaks.
+
 ## [14.20.0] - 2026-11-26
 ### Added
 - **Boss Loot FX Animation Opacity**: Plays Boss Loot FX animations at a percentage of their normal opacity (default 75%), so tokens, templates and the map stay visible underneath. Other animation modules aren't affected. Off by default.

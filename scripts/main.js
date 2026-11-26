@@ -42,6 +42,7 @@ import { initFixTokenBarRefresh } from "./features/patches/fix-token-bar-refresh
 import { initFixPlaceablesSidebarTab } from "./features/patches/fix-placeables-sidebar-tab.js";
 import { initFixFilePickerCurrentFile } from "./features/patches/fix-file-picker-current-file.js";
 import { initFixMacBatchBuffer } from "./features/patches/fix-mac-batch-buffer.js";
+import { initFixRegionEffectDeletedToken } from "./features/patches/fix-region-effect-deleted-token.js";
 
 // Dashboard, API, migration
 import { MODULE_ID, log, isFeatureActive } from "./context.js";
@@ -721,6 +722,7 @@ Hooks.once("setup", () => {
     initFixPlaceablesSidebarTab();
     initFixFilePickerCurrentFile();
     initFixMacBatchBuffer();
+    initFixRegionEffectDeletedToken();
 });
 
 Hooks.once("ready", async () => {
