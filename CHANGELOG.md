@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.21.1] - 2026-11-27
+### Fixed
+- **Clear Targets Token Control Button**: Only a GM can clear everyone's targets. A player could send the request themselves before.
+- **Auto-Add Tokens to Combat**: Tokens are added to the combat of the scene they are placed on, even when the GM is looking at another scene. Before, the combat of the scene the GM was viewing was used, so tokens placed on another scene were left out.
+- **Toolbar Limitation**: The scroll arrows of a limited toolbar keep showing and hiding correctly after the toolbar was reset and limited again.
+- **Enhanced Teleport Targeting UI**: A second Automated Animations teleport started within 5 seconds of the first no longer loses its destination click.
+
 ## [14.21.0] - 2026-11-26
 ### Fixed
 - **Region Effects on Deleted Tokens**: Deleting an unlinked token (such as a slain enemy) that stands in a region applying an effect no longer shows the error "undefined id [...] does not exist in the EmbeddedCollection collection". Works in every game system; the D&D 5e version of the effect is fixed by Nik's DnD5e Tweaks.

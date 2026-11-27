@@ -7,6 +7,7 @@
  *
  * @updated niks-dnd5e-tweaks v14.57.0 (Active GM check uses the V14 API)
  * @updated v14.0.0 (the summon check moved to Nik's DnD5e Tweaks as an extension)
+ * @updated v14.21.1 (uses the combat of the token's own scene, not the one the GM is viewing)
  */
 import { MODULE_ID, getSetting, debug } from "../../context.js";
 import { getExtensions } from "../../settings-registry.js";
@@ -37,13 +38,15 @@ function _onCreateToken(tokenDocument, options, userId) {
         const activeGM = game.users.activeGM;
         if (!activeGM?.isSelf) return;
 
-        // Check if an active combat exists
-        const combat = game.combat ?? game.combats?.active;
-        if (!combat) return;
-
-        // Check if combat belongs to the scene where token was created
+        // The combat of the scene the token was created on. `game.combat` is the combat of the scene this GM
+        // views, which may be another one; a combat not linked to any scene takes tokens from every scene.
         const tokenScene = tokenDocument.parent;
-        if (combat.scene && tokenScene && combat.scene.id !== tokenScene.id) return;
+        const combats = game.combats?.contents ?? [];
+        const onScene = c => c.scene && tokenScene && (c.scene.id === tokenScene.id);
+        const combat = combats.find(c => c.active && onScene(c))
+            ?? combats.find(c => c.started && onScene(c))
+            ?? ((game.combat && !game.combat.scene) ? game.combat : null);
+        if (!combat) return;
 
         // Prevent duplicate combatants if token is already in combat
         const existingCombatant = combat.combatants.some(c => c.tokenId === tokenDocument.id);

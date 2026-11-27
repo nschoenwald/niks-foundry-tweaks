@@ -742,7 +742,7 @@ Hooks.once("ready", async () => {
 
     // One socket listener for the whole module, routing by action
     game.socket.on(`module.${MODULE_ID}`, (data, senderId) => {
-        if (data?.action === "clearTargets") onClearTargetsSocket(data);
+        if (data?.action === "clearTargets") onClearTargetsSocket(data, senderId);
         else if (data?.action?.startsWith?.("syncCheck")) onSyncCheckSocket(data, senderId);
     });
 

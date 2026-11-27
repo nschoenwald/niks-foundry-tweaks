@@ -9,6 +9,7 @@
  *   both teleport on the same cast; `api.teleportTargeting.pickDestination` for add-ons)
  * @updated v14.9.1 (Range border for BLFX and API sessions, which have no A-A border: follows the grid's diagonal rule)
  * @updated v14.14.1 (Ghost preview is a clone of the token drawn by Foundry, so Dynamic Token Rings look right)
+ * @updated v14.21.1 (A second teleport within 5 seconds keeps its click capture)
  *
  * Extension `teleportTargeting` (read for BLFX sessions):
  *   `{ getTeleportInfo?: ({ sourceToken, source: "blfx" }) => { range?: number|null, itemName?: string } | null }`
@@ -49,6 +50,8 @@ import { patchMethod } from "../../utils/patch-helper.js";
 let activeSession = null;
 let capturedAAListener = null;
 let isInterceptingStage = false;
+/** Safety timer that ends the current stage interception; cleared when it ends sooner. */
+let interceptionTimer = null;
 let originalAddListener = null;
 let originalOn = null;
 let isUpdatingGhost = false;
@@ -369,14 +372,17 @@ function setupStageInterception(ownPointerDownHandler) {
     canvas.app.stage.addListener = intercept;
     canvas.app.stage.on = intercept;
 
-    // Safety timeout: restore original after 5 seconds if not triggered
-    setTimeout(restoreStageInterception, 5000);
+    // Safety timeout: restore original after 5 seconds if not triggered. Cleared when the interception ends
+    // sooner, so it can't end the interception of a later teleport.
+    interceptionTimer = setTimeout(restoreStageInterception, 5000);
 }
 
 /**
  * Restores original stage listener functions.
  */
 function restoreStageInterception() {
+    clearTimeout(interceptionTimer);
+    interceptionTimer = null;
     if (!isInterceptingStage) return;
     disarmAAListener = false;
     isInterceptingStage = false;

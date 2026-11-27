@@ -176,7 +176,7 @@ Plays Boss Loot FX (BLFX) animations at a percentage of their normal opacity (de
 ## 🏁 Combat Flow
 
 ### Auto-Add Tokens to Combat
-Tokens created or dragged onto the scene while a combat is running are added to the combat automatically. System modules can leave some tokens out (Nik's DnD5e Tweaks leaves out summoned creatures).
+Tokens created or dragged onto a scene while that scene has a combat are added to it automatically, whichever scene the GM is looking at. A combat not linked to a scene takes tokens from every scene. System modules can leave some tokens out (Nik's DnD5e Tweaks leaves out summoned creatures).
 
 ---
 

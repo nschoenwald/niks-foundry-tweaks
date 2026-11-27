@@ -6,6 +6,7 @@
  * @updated niks-dnd5e-tweaks v14.49.0 (Capped layout retries and debounced resize handling)
  * @updated niks-dnd5e-tweaks v14.57.0 (One render hook instead of two, observer disconnected while disabled, dropped pre-V13 selectors)
  * @updated v14.16.1 (Render hook and observer share one queued pass instead of measuring the toolbars twice per render)
+ * @updated v14.21.1 (Scroll arrows keep updating after a toolbar was reset and limited again)
  */
 import { getSetting, debug } from "../../context.js";
 
@@ -229,6 +230,25 @@ function updateSingleToolbar(toolbar, buttons, limit, retries = 0) {
 }
 
 /**
+ * Show each scroll arrow only while the toolbar can scroll that way. Looks the arrows up each time: a reset
+ * removes them and a later pass adds new ones, while the scroll listener stays bound to the toolbar.
+ * @param {HTMLElement} toolbar
+ */
+function updateArrowStates(toolbar) {
+    const topArrow = toolbar.querySelector(".nft-toolbar-arrow-up");
+    const bottomArrow = toolbar.querySelector(".nft-toolbar-arrow-down");
+    if (!topArrow || !bottomArrow) return;
+    const canScrollUp = toolbar.scrollTop > 4;
+    const canScrollDown = toolbar.scrollTop + toolbar.clientHeight < toolbar.scrollHeight - 4;
+
+    topArrow.style.opacity = canScrollUp ? "1" : "0";
+    topArrow.style.pointerEvents = canScrollUp ? "auto" : "none";
+
+    bottomArrow.style.opacity = canScrollDown ? "1" : "0";
+    bottomArrow.style.pointerEvents = canScrollDown ? "auto" : "none";
+}
+
+/**
  * Attaches or updates sticky directional arrow indicators (up/down chevrons) on a scrollable toolbar.
  */
 function attachArrowIndicators(toolbar) {
@@ -259,23 +279,12 @@ function attachArrowIndicators(toolbar) {
         toolbar.append(bottomArrow);
     }
 
-    const updateArrows = () => {
-        const canScrollUp = toolbar.scrollTop > 4;
-        const canScrollDown = toolbar.scrollTop + toolbar.clientHeight < toolbar.scrollHeight - 4;
-
-        topArrow.style.opacity = canScrollUp ? "1" : "0";
-        topArrow.style.pointerEvents = canScrollUp ? "auto" : "none";
-
-        bottomArrow.style.opacity = canScrollDown ? "1" : "0";
-        bottomArrow.style.pointerEvents = canScrollDown ? "auto" : "none";
-    };
-
     if (!toolbar.dataset.scrollBound) {
         toolbar.dataset.scrollBound = "true";
-        toolbar.addEventListener("scroll", updateArrows);
+        toolbar.addEventListener("scroll", () => updateArrowStates(toolbar));
     }
 
-    updateArrows();
+    updateArrowStates(toolbar);
 }
 
 /**

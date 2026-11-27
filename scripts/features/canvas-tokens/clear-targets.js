@@ -14,6 +14,7 @@
  *
  * @introduced v14.0.0 (moved from Nik's DnD5e Tweaks, added there in v14.39.0)
  * @updated niks-dnd5e-tweaks v14.41.1
+ * @updated v14.21.1 (socket messages are checked against the sender id from the server)
  */
 import { MODULE_ID, debug, log, isFeatureActive } from "../../context.js";
 
@@ -215,17 +216,15 @@ export function clearTargets({ broadcast = true } = {}) {
  * Handle incoming socket message for clearing targets across clients.
  *
  * @param {object} data
+ * @param {string} senderId  The sender's id, passed by the server (a `senderId` in the payload could be anyone's).
  */
-export function onClearTargetsSocket(data) {
+export function onClearTargetsSocket(data, senderId) {
     if (data?.action !== "clearTargets") return;
 
-    // Security: Only accept clearTargets commands issued by an authenticated GM
-    if (data.senderId) {
-        const sender = game.users.get(data.senderId);
-        if (!sender?.isGM) {
-            log(`Clear Targets | Ignored unauthorized clearTargets socket message from non-GM user ${data.senderId}`);
-            return;
-        }
+    // Security: Only accept clearTargets commands issued by a GM
+    if (!game.users.get(senderId)?.isGM) {
+        log(`Clear Targets | Ignored clearTargets socket message from non-GM user ${senderId}`);
+        return;
     }
 
     debug("Clear Targets | Received clearTargets socket message from GM; clearing targets");
